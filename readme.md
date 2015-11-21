@@ -26,6 +26,7 @@ and they mimic the normal motions in emacs.
 - `r`: reset window layout to standard
 - `w`: cycle through windows so that you can adjust other window
 panes. `W` cycles in the opposite direction.
+- `?`: Display menu listing commands
 
 The best part of this is that resize-window keeps listening for more
 keystrokes until it doesn't recognize input. So you don't have to make
