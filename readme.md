@@ -35,6 +35,8 @@ view right away. Just invoke resize-window and just press your normal
 motions and cycle windows until everything is adjusted to how you like
 it.
 
+![usage gif](resize-mode.gif)
+
 ## Bugs ##
 - When in resize mode, there's a visual overlay over the current
 buffer to give some visual indication what's going on. However, if
