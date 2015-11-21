@@ -77,15 +77,18 @@ CHOICE is a (key function description allows-capital."
             (concat (rm-display-choice choice) "\n" documentation)))
     documentation))
 
-(defvar rm-capital-argument 5
-  "Set how big a capital letter movement is.")
+(defcustom rm-capital-argument 5
+  "Set how big a capital letter movement is."
+  :type 'integer)
 
-(defvar rm-default-argument 1
-  "Set how big the default movement should be.")
+(defcustom rm-default-argument 1
+  "Set how big the default movement should be."
+  :type 'integer)
 
-(defvar rm-allow-backgrounds t
+(defcustom rm-allow-backgrounds t
   "Allow resize mode to set a background.
-This is also valuable to see that you are in resize mode.")
+This is also valuable to see that you are in resize mode."
+  :type 'boolean)
 
 (defvar rm-background-overlay ()
   "Holder for background overlay.")
