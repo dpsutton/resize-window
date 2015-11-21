@@ -13,7 +13,7 @@ As soon as it gets polished a little further, it will hopefully be
 accepted to ELPA or something (I'm not too sure about all of the
 differences, ELPA, MELPA, marmalade, etc.
 
-But, just run resize-window. There are only a few commands to learn,
+But, just run `M-x resize-window`. There are only a few commands to learn,
 and they mimic the normal motions in emacs.
 
 - `n`: Makes the window vertically bigger, think scrolling down. Use
@@ -53,11 +53,11 @@ mode and just a function. In fact, i'm not sure that it needs to be
 a minor mode, just needs to have a nice keybinding. But the things
 that are calling my name for it being a minor mode are easily
 customized variables, etc
-- invert capital/non-capital behavior. Right now, lower case
-selections move the window size by 1 and upper-case moves
-by 5. These should both be easy to customize and easy to *flip*. Ie,
-make the lowercase `n` make it bigger by 5 and the upper-case `N`
-increase by 1.
+- allow customization to invert capital/non-capital behavior. Right
+now, lower case selections move the window size by 1 and upper-case
+moves by 5. These should both be easy to customize and easy to
+*flip*. Ie, make the lowercase `n` make it bigger by 5 and the
+upper-case `N` increase by 1.
 
 ## Shout out ##
 This is my first attempt at really doing anything in elisp and to get
@@ -78,6 +78,6 @@ The function `resize-window` is just a while loop listening for
 characters, checking if that character is associated to anything in
 the list and checking if `(+ char 32)` is associated to anything in
 the list (which is just the uppercase version (or is it? now its a
-bug). If lower case matches, do it, it uppercase matches something,
+bug)). If lower case matches, do it, if uppercase matches something,
 then make sure that's ok and do it but with the `rm-capital-argument`
-invoking.
+rather than `rm-default-argument`.
