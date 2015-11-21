@@ -70,16 +70,19 @@ This is also valuable to see that you are in resize mode."
   "Face for when resizing window.")
 
 (defvar rm-dispatch-alist
-  ;; key function description allow-caps-for-scaled
-  '((?n rm-enlarge-down          " Resize - Expand down" t)
-    (?p rm-enlarge-up            " Resize - Expand up" t)
-    (?f rm-enlarge-horizontally  " Resize - horizontally" t)
-    (?b rm-shrink-horizontally   " Resize - shrink horizontally" t)
-    (?r rm-reset-windows         " Resize - reset window layour" nil)
-    (?w rm-cycle-window-positive " Resize - cycle window" nil)
-    (?W rm-cycle-window-negative " Resize - cycle window" nil)
-    (?? rm-display-menu          " Resize - display menu" nil))
+  ;; (key function description allow-caps-for-scaled)
+  ()
   "List of actions for `rm-dispatch-default.")
+
+(setq rm-dispatch-alist
+      '((?n rm-enlarge-down          " Resize - Expand down" t)
+        (?p rm-enlarge-up            " Resize - Expand up" t)
+        (?f rm-enlarge-horizontally  " Resize - horizontally" t)
+        (?b rm-shrink-horizontally   " Resize - shrink horizontally" t)
+        (?r rm-reset-windows         " Resize - reset window layour" nil)
+        (?w rm-cycle-window-positive " Resize - cycle window" nil)
+        (?W rm-cycle-window-negative " Resize - cycle window" nil)
+        (?? rm-display-menu          " Resize - display menu" nil)))
 
 (defun rm-display-choice (choice)
   "Formats screen message about CHOICE.
