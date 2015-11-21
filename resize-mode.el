@@ -49,6 +49,26 @@
   :group 'convenience
   :prefix "rm-")
 
+(defcustom rm-capital-argument 5
+  "Set how big a capital letter movement is."
+  :type 'integer)
+
+(defcustom rm-default-argument 1
+  "Set how big the default movement should be."
+  :type 'integer)
+
+(defcustom rm-allow-backgrounds t
+  "Allow resize mode to set a background.
+This is also valuable to see that you are in resize mode."
+  :type 'boolean)
+
+(defvar rm-background-overlay ()
+  "Holder for background overlay.")
+
+(defface rm-background-face
+  '((t (:foreground "gray40")))
+  "Face for when resizing window.")
+
 (defvar rm-dispatch-alist
   ;; key function description allow-caps-for-scaled
   '((?n rm-enlarge-down          " Resize - Expand down" t)
@@ -76,26 +96,6 @@ CHOICE is a (key function description allows-capital."
       (setq documentation
             (concat (rm-display-choice choice) "\n" documentation)))
     documentation))
-
-(defcustom rm-capital-argument 5
-  "Set how big a capital letter movement is."
-  :type 'integer)
-
-(defcustom rm-default-argument 1
-  "Set how big the default movement should be."
-  :type 'integer)
-
-(defcustom rm-allow-backgrounds t
-  "Allow resize mode to set a background.
-This is also valuable to see that you are in resize mode."
-  :type 'boolean)
-
-(defvar rm-background-overlay ()
-  "Holder for background overlay.")
-
-(defface rm-background-face
-  '((t (:foreground "gray40")))
-  "Face for when resizing window.")
 
 (defun rm-make-background ()
   "Place a background over the current window."
@@ -150,6 +150,7 @@ to enlarge right.  Current ARG is not supported."
               (setq reading-characters nil)
               (delete-overlay rm-background-overlay))))))))
 
+;;; Function Handlers
 (defun rm-enlarge-down (&optional size)
   "Extend the current window downwards by optional SIZE.
 If no SIZE is given, extend by `rm-default-argument`"
