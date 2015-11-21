@@ -55,10 +55,27 @@
     (?p rm-enlarge-up            " Resize - Expand up" t)
     (?f rm-enlarge-horizontally  " Resize - horizontally" t)
     (?b rm-shrink-horizontally   " Resize - shrink horizontally" t)
-    (?r rm-reset-windows         " Resize -- reset window layour" nil)
+    (?r rm-reset-windows         " Resize - reset window layour" nil)
     (?w rm-cycle-window-positive " Resize - cycle window" nil)
-    (?W rm-cycle-window-negative " Resize - cycle window" nil))
+    (?W rm-cycle-window-negative " Resize - cycle window" nil)
+    (?? rm-display-menu          " Resize - display menu" nil))
   "List of actions for `rm-dispatch-default.")
+
+(defun rm-display-choice (choice)
+  "Formats screen message about CHOICE.
+CHOICE is a (key function description allows-capital."
+  (format "%s: %s " (if (rm-allows-capitals choice)
+                        (format "%s|%s" (string (car choice)) (string (- (car choice) 32)))
+                      (string (car choice)))
+          (car (cdr (cdr choice)))))
+
+(defun rm-get-documentation-strings ()
+  "Get all documentation strings for display."
+  (let ((documentation ""))
+    (dolist (choice rm-dispatch-alist)
+      (setq documentation
+            (concat (rm-display-choice choice) "\n" documentation)))
+    documentation))
 
 (defvar rm-capital-argument 5
   "Set how big a capital letter movement is.")
@@ -78,7 +95,7 @@ This is also valuable to see that you are in resize mode.")
   "Face for when resizing window.")
 
 (defun rm-make-background ()
-    "Place a background over the current window."
+  "Place a background over the current window."
   (when rm-allow-backgrounds
     (let ((ol (make-overlay
                (point-min)
@@ -97,7 +114,8 @@ If SCALED, then call action with the rm-capital-argument."
       (if scaled
           (funcall action rm-capital-argument)
         (funcall action))
-      (message "%s" description))))
+      (unless (equalp (car choice) ??)
+        (message "%s" description)))))
 
 (defun rm-allows-capitals (choice)
   "To save time typing, we will tell whether we allow capitals for scaling.
@@ -113,8 +131,11 @@ Press n to enlarge down, p to enlarge up, b to enlarge left and f
 to enlarge right.  Current ARG is not supported."
   (interactive)
   (setq rm-background-overlay (rm-make-background))
-  (let ((rm-active t))
-    (while rm-active
+  (message "Resize mode: enter character, ? for help")
+  (let ((reading-characters t)
+        ;; allow mini-buffer to collapse after displaying menu
+        (resize-mini-windows t))
+    (while reading-characters
       (let* ((char (read-char-exclusive))
              (choice (assoc char rm-dispatch-alist))
              (capital (assoc (+ char 32) rm-dispatch-alist)))
@@ -123,7 +144,7 @@ to enlarge right.  Current ARG is not supported."
           (if (and capital (rm-allows-capitals capital))
               (rm-execute-action capital t)
             (progn
-              (setq rm-active nil)
+              (setq reading-characters nil)
               (delete-overlay rm-background-overlay))))))))
 
 (defun rm-enlarge-down (&optional size)
@@ -162,6 +183,10 @@ If no SIZE is given, extend by `rm-default-argument`"
   (delete-overlay rm-background-overlay)
   (other-window -1)
   (setq rm-background-overlay (rm-make-background)))
+
+(defun rm-display-menu ()
+  "Display menu in minibuffer."
+  (message "%s" (rm-get-documentation-strings)))
 
 (provide 'resize-mode)
 ;;; resize-mode ends here
