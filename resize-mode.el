@@ -1,31 +1,74 @@
 ;;; package -- Summary
+
+;; Copyright (C) 2015  Free Software Foundation, Inc.
+
+;; Author: Dan Sutton  <danielsutton01@gmail.com>
+;; Maintainer: Dan Sutton  <danielsutton01@gmail.com>
+;; URL: https://github.com/dpsutton/resize-mode
+;; Package-Version: 20150803.837
+;; Version: 0.1
+;; Package-Requires: ()
+;; Keywords: window, resize
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see
+;; <http://www.gnu.org/licenses/>.
+
 ;;; Commentary:
+;; Easily allows you to resize windows. Rather than guessing that you
+;; want `C-u 17 C-x {`, you could just press FFff, which enlarges 5
+;; lines, then 5 lines, then one and then one. The idea is that the
+;; normal motions n,p,f,b along with r for reset and w for cycling
+;; windows allows for super simple resizing of windows. All of this is
+;; inside of a while loop so that you don't have to invoke more chords
+;; to resize again, but just keep using standard motions until you are
+;; happy.
+
+;; All of the work is done inside of resize-window. Its just a while
+;; loop that keeps looping over character input until it doesn't
+;; recognize an option or an allowable capital. The dispatch alist has
+;; a character code to look for, a function to invoke, a string for
+;; display and whether to match against capital letters. If so, it is
+;; invoked with the default capital argument rather than the default
+;; argument.
 
 ;;; Code:
-;; (defvar resize-mode nil
-;;   "Minor mode for resizing windows.")
 
 (defgroup resize-window nil
   "Quickly resize current window"
   :group 'convenience
   :prefix "rm-")
 
-(defvar rm-dispatch-alist ()
+(defvar rm-dispatch-alist
+  ;; key function description allow-caps-for-scaled
+  '((?n rm-enlarge-down          " Resize - Expand down" t)
+    (?p rm-enlarge-up            " Resize - Expand up" t)
+    (?f rm-enlarge-horizontally  " Resize - horizontally" t)
+    (?b rm-shrink-horizontally   " Resize - shrink horizontally" t)
+    (?r rm-reset-windows         " Resize -- reset window layour" nil)
+    (?w rm-cycle-window-positive " Resize - cycle window" nil)
+    (?W rm-cycle-window-negative " Resize - cycle window" nil))
   "List of actions for `rm-dispatch-default.")
 
-(defvar rm-capital-argument ()
+(defvar rm-capital-argument 5
   "Set how big a capital letter movement is.")
 
-(setq rm-capital-argument 5)
-
-(defvar rm-default-argument ()
+(defvar rm-default-argument 1
   "Set how big the default movement should be.")
 
-(defvar rm-allow-backgrounds ()
+(defvar rm-allow-backgrounds t
   "Allow resize mode to set a background.
 This is also valuable to see that you are in resize mode.")
-
-(setq rm-allow-backgrounds t)
 
 (defvar rm-background-overlay ()
   "Holder for background overlay.")
@@ -43,18 +86,6 @@ This is also valuable to see that you are in resize mode.")
                (window-buffer))))
       (overlay-put ol 'face 'rm-background-face)
       ol)))
-
-(setq rm-default-argument 1)
-
-(setq rm-dispatch-alist
-      ;; key function description allow-caps-for-scaled
-      '((?n rm-enlarge-down          " Resize - Expand down" t)
-        (?p rm-enlarge-up            " Resize - Expand up" t)
-        (?f rm-enlarge-horizontally  " Resize - horizontally" t)
-        (?b rm-shrink-horizontally   " Resize - shrink horizontally" t)
-        (?r rm-reset-windows         " Resize -- reset window layour" nil)
-        (?w rm-cycle-window-positive " Resize - cycle window" nil)
-        (?W rm-cycle-window-negative " Resize - cycle window" nil)))
 
 (defun rm-execute-action (choice &optional scaled)
   "Given a CHOICE, grab values out of the alist.
