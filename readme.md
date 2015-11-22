@@ -36,6 +36,30 @@ view right away. Just invoke resize-window and just press your normal
 motions and cycle windows until everything is adjusted to how you like
 it.
 
+## How to extend it ##
+There are a few things that you can do. There are customizable variables:
+- rw-capital-argument (default: 5)
+- rw-default-argument (default: 1)
+- rw-alow-backgrounds (default: t)
+
+Any of these can be customized by using `customize-group RET
+resize-window` or by setting the appropriate variable in your init.el
+file as normal: `(setq <var> <val>)`.
+
+Further, there are alias, held in the `rw-alias-list` alist. It is
+currently defined as
+    (defvar rw-alias-list
+      '((right ?f)
+        (up ?n)
+        (left ?b)
+        (down ?p))
+      "List of aliases for commands.
+      Rather than have to use n, etc, you can alias keys for others.")
+
+However, you can easily add your own. For instance, to alias h to ?,
+the help command, just add `(push '(?h ??) rw-alias-list)` in your init.el.
+
+
 ![usage gif](resize-mode.gif)
 
 ## Bugs ##
