@@ -69,20 +69,18 @@ This is also valuable to see that you are in resize mode."
   '((t (:foreground "gray40")))
   "Face for when resizing window.")
 
-(defvar rw-dispatch-alist ()
+(defvar rw-dispatch-alist
+  '((?n rw-enlarge-down          " Resize - Expand down" t)
+    (?p rw-enlarge-up            " Resize - Expand up" t)
+    (?f rw-enlarge-horizontally  " Resize - horizontally" t)
+    (?b rw-shrink-horizontally   " Resize - shrink horizontally" t)
+    (?r rw-reset-windows         " Resize - reset window layour" nil)
+    (?w rw-cycle-window-positive " Resize - cycle window" nil)
+    (?W rw-cycle-window-negative " Resize - cycle window" nil)
+    (?? rw-display-menu          " Resize - display menu" nil))
   "List of actions for `rw-dispatch-default.
 Main data structure of the dispatcher with the form:
 \(char function documentation match-capitals\)")
-
-(setq rw-dispatch-alist
-      '((?n rw-enlarge-down          " Resize - Expand down" t)
-        (?p rw-enlarge-up            " Resize - Expand up" t)
-        (?f rw-enlarge-horizontally  " Resize - horizontally" t)
-        (?b rw-shrink-horizontally   " Resize - shrink horizontally" t)
-        (?r rw-reset-windows         " Resize - reset window layour" nil)
-        (?w rw-cycle-window-positive " Resize - cycle window" nil)
-        (?W rw-cycle-window-negative " Resize - cycle window" nil)
-        (?? rw-display-menu          " Resize - display menu" nil)))
 
 (defun rw-display-choice (choice)
   "Formats screen message about CHOICE.
