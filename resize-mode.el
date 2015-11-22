@@ -65,7 +65,7 @@ This is also valuable to see that you are in resize mode."
 (defvar rw-background-overlay ()
   "Holder for background overlay.")
 
-(defface rw-background-face
+(defface rw-background
   '((t (:foreground "gray40")))
   "Face for when resizing window.")
 
@@ -107,7 +107,7 @@ CHOICE is a (key function description allows-capital."
                (point-min)
                (point-max)
                (window-buffer))))
-      (overlay-put ol 'face 'rw-background-face)
+      (overlay-put ol 'face 'rw-background)
       ol)))
 
 (defun rw-execute-action (choice &optional scaled)
