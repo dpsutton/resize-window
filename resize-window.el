@@ -82,6 +82,25 @@ This is also valuable to see that you are in resize mode."
 Main data structure of the dispatcher with the form:
 \(char function documentation match-capitals\)")
 
+;; (setq right 'right left 'left up 'up down 'down)
+(defvar rw-alias-list
+  '((right ?f)
+    (up ?n)
+    (left ?b)
+    (down ?p))
+  "List of aliases for commands.
+Rather than have to use n, etc, you can alias keys for others.")
+
+(defun rw-match-alias (key)
+  "Taken the KEY or keyboard selection from `read-key` check for alias.
+Match the KEY against the alias table.  If found, return the value that it
+points to, which should be a key in the rw-dispatch-alist.
+Otherwise, return the key."
+  (let ((alias (assoc key rw-alias-list)))
+    (if alias
+        (car (cdr alias))
+      key)))
+
 (defun rw-display-choice (choice)
   "Formats screen message about CHOICE.
 CHOICE is a \(key function description allows-capital\)."
@@ -141,7 +160,7 @@ to enlarge right."
         ;; allow mini-buffer to collapse after displaying menu
         (resize-mini-windows t))
     (while reading-characters
-      (let* ((char (read-char-exclusive))
+      (let* ((char (rw-match-alias (read-key)))
              (choice (assoc char rw-dispatch-alist))
              (capital (assoc (+ char 32) rw-dispatch-alist)))
         (cond
