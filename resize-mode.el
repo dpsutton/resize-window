@@ -86,9 +86,11 @@ Main data structure of the dispatcher with the form:
 
 (defun rw-display-choice (choice)
   "Formats screen message about CHOICE.
-CHOICE is a (key function description allows-capital."
+CHOICE is a \(key function description allows-capital\)."
   (format "%s: %s " (if (rw-allows-capitals choice)
-                        (format "%s|%s" (string (car choice)) (string (- (car choice) 32)))
+                        (format "%s|%s"
+                                (string (car choice))
+                                (string (- (car choice) 32)))
                       (string (car choice)))
           (car (cdr (cdr choice)))))
 
