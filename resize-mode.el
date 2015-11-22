@@ -134,7 +134,7 @@ nil."
 (defun resize-window ()
   "Resize the window.
 Press n to enlarge down, p to enlarge up, b to enlarge left and f
-to enlarge right.  Current ARG is not supported."
+to enlarge right."
   (interactive)
   (setq rw-background-overlay (rw-make-background))
   (message "Resize mode: enter character, ? for help")
