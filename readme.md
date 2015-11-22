@@ -48,13 +48,15 @@ file as normal: `(setq <var> <val>)`.
 
 Further, there are alias, held in the `rw-alias-list` alist. It is
 currently defined as
+
+
     (defvar rw-alias-list
       '((right ?f)
         (up ?n)
         (left ?b)
         (down ?p))
       "List of aliases for commands.
-      Rather than have to use n, etc, you can alias keys for others.")
+    Rather than have to use n, etc, you can alias keys for others.")
 
 However, you can easily add your own. For instance, to alias h to ?,
 the help command, just add `(push '(?h ??) rw-alias-list)` in your init.el.
