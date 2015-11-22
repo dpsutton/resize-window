@@ -82,7 +82,6 @@ This is also valuable to see that you are in resize mode."
 Main data structure of the dispatcher with the form:
 \(char function documentation match-capitals\)")
 
-;; (setq right 'right left 'left up 'up down 'down)
 (defvar rw-alias-list
   '((right ?f)
     (up ?n)
