@@ -5,8 +5,8 @@
 ;; Author: Dan Sutton  <danielsutton01@gmail.com>
 ;; Maintainer: Dan Sutton  <danielsutton01@gmail.com>
 ;; URL: https://github.com/dpsutton/resize-mode
-;; Package-Version: 20150803.837
-;; Version: 0.1
+
+;; Version: 0.1.0
 ;; Package-Requires: ()
 ;; Keywords: window, resize
 
