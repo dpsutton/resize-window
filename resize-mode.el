@@ -116,12 +116,11 @@ If SCALED, then call action with the rw-capital-argument."
   ;; (char function description)
   (let ((action (cadr choice))
         (description (car (cdr (cdr choice)))))
-    (progn
-      (if scaled
-          (funcall action rw-capital-argument)
-        (funcall action))
-      (unless (equalp (car choice) ??)
-        (message "%s" description)))))
+    (if scaled
+        (funcall action rw-capital-argument)
+      (funcall action))
+    (unless (equalp (car choice) ??)
+      (message "%s" description))))
 
 (defun rw-allows-capitals (choice)
   "To save time typing, we will tell whether we allow capitals for scaling.
