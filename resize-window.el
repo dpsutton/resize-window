@@ -193,5 +193,5 @@ If no SIZE is given, extend by `rw-default-argument`"
   "Display menu in minibuffer."
   (message "%s" (rw-get-documentation-strings)))
 
-(provide 'resize-mode)
-;;; resize-mode ends here
+(provide 'resize-window)
+;;; resize-window ends here
