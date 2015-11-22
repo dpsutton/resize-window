@@ -144,13 +144,12 @@ to enlarge right."
       (let* ((char (read-char-exclusive))
              (choice (assoc char rw-dispatch-alist))
              (capital (assoc (+ char 32) rw-dispatch-alist)))
-        (if choice
-            (rw-execute-action choice)
-          (if (and capital (rw-allows-capitals capital))
-              (rw-execute-action capital t)
-            (progn
-              (setq reading-characters nil)
-              (delete-overlay rw-background-overlay))))))))
+        (cond
+         (choice (rw-execute-action choice))
+         ((and capital (rw-allows-capitals capital))
+          (rw-execute-action capital t))
+         (t (setq reading-characters nil)
+            (delete-overlay rw-background-overlay)))))))
 
 ;;; Function Handlers
 (defun rw-enlarge-down (&optional size)
