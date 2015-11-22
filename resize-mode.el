@@ -69,10 +69,10 @@ This is also valuable to see that you are in resize mode."
   '((t (:foreground "gray40")))
   "Face for when resizing window.")
 
-(defvar rw-dispatch-alist
-  ;; (key function description allow-caps-for-scaled)
-  ()
-  "List of actions for `rw-dispatch-default.")
+(defvar rw-dispatch-alist ()
+  "List of actions for `rw-dispatch-default.
+Main data structure of the dispatcher with the form:
+\(char function documentation match-capitals\)")
 
 (setq rw-dispatch-alist
       '((?n rw-enlarge-down          " Resize - Expand down" t)
