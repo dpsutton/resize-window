@@ -1,4 +1,4 @@
-;;; package -- Summary
+;;; package -- Summary -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
