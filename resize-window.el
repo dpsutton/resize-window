@@ -1,4 +1,4 @@
-;;; package -- Summary -*- lexical-binding: t; -*-
+;;; window-resize.el --- Summary -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -119,7 +119,7 @@ If SCALED, then call action with the rw-capital-argument."
     (if scaled
         (funcall action rw-capital-argument)
       (funcall action))
-    (unless (equalp (car choice) ??)
+    (unless (equal (car choice) ??)
       (message "%s" description))))
 
 (defun rw-allows-capitals (choice)
@@ -194,4 +194,4 @@ If no SIZE is given, extend by `rw-default-argument`"
   (message "%s" (rw-get-documentation-strings)))
 
 (provide 'resize-window)
-;;; resize-window ends here
+;;; resize-window.el ends here
