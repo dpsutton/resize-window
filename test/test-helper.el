@@ -4,7 +4,11 @@
 ;; test helper inspired from https://github.com/tonini/overseer.el/blob/master/test/test-helper.el
 
 ;;; Code:
-
+(require 'undercover)
+(undercover "*.el" "resize-window/*.el"
+            (:exclude "*-test.el")
+            (:send-report nil)
+            (:report-file "/tmp/undercover-report.json"))
 (require 'f)
 
 (defvar cpt-path

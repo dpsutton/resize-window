@@ -1,4 +1,9 @@
 (require 'f)
+(require 'undercover)
+(undercover "*.el" "resize-window/*.el"
+            (:exclude "*-test.el")
+            (:report-file "/tmp/undercover-report.json"))
+
 
 (defvar resize-window-support-path
   (f-dirname load-file-name))
