@@ -1,5 +1,12 @@
 # Resize Mode #
 
+[![Build Status](https://travis-ci.org/dpsutton/resize-window.svg)](https://travis-ci.org/dpsutton/resize-window)
+[![Coverage Status](https://coveralls.io/repos/dpsutton/resize-window/badge.svg)](https://coveralls.io/r/dpsutton/resize-window)
+[![MELPA](http://melpa.org/packages/resize-window-badge.svg)](http://melpa.org/#/resize-window)
+[![MELPA stable](http://stable.melpa.org/packages/resize-window-badge.svg)](http://stable.melpa.org/#/resize-window)
+[![Tag Version](https://img.shields.io/github/tag/dpsutton/resize-window.svg)](https://github.com/dpsutton/resize-window/tags)
+[![License] (http://img.shields.io/:license-gpl3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
+
 ## What it is ##
 Resizing windows is a pain in emacs. You have to do an uncomfortable
 chord `C-x {`, `C-x ^`. Giving prefixes to make the jump larger than 1
