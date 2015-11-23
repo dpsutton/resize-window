@@ -13,6 +13,13 @@ As soon as it gets polished a little further, it will hopefully be
 accepted to ELPA or something (I'm not too sure about all of the
 differences, ELPA, MELPA, marmalade, etc.
 
+I've submitted for elpa and have a pending request to have copyright
+assigned. Until then, just drop it into your load path. I've found the
+following keybinding to be really nice:
+`(global-set-key (kbd "C-c ;") 'resize-window)`.
+This keeps your fingers on the home row, especially if you've remapped
+the caps lock key to control.
+
 But, just run `M-x resize-window`. There are only a few commands to learn,
 and they mimic the normal motions in emacs.
 
