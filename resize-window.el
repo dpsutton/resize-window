@@ -1,4 +1,4 @@
-;;; window-resize.el --- Summary -*- lexical-binding: t; -*-
+;;; resize-window.el --- easily resize windows          -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -7,7 +7,7 @@
 ;; URL: https://github.com/dpsutton/resize-mode
 
 ;; Version: 0.1.0
-;; Package-Requires: ()
+;; Package-Requires: ((emacs "24"))
 ;; Keywords: window, resize
 
 ;; This program is free software: you can redistribute it and/or modify
