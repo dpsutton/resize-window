@@ -1,7 +1,7 @@
 # Resize Mode #
 
 [![Build Status](https://travis-ci.org/dpsutton/resize-window.svg)](https://travis-ci.org/dpsutton/resize-window)
-[![Coverage Status](https://coveralls.io/repos/dpsutton/resize-window/badge.svg)](https://coveralls.io/r/dpsutton/resize-window)
+[![Coverage Status](https://coveralls.io/repos/dpsutton/resize-window/badge.svg?branch=master&service=github)](https://coveralls.io/github/dpsutton/resize-window?branch=master)
 [![MELPA](http://melpa.org/packages/resize-window-badge.svg)](http://melpa.org/#/resize-window)
 [![MELPA stable](http://stable.melpa.org/packages/resize-window-badge.svg)](http://stable.melpa.org/#/resize-window)
 [![Tag Version](https://img.shields.io/github/tag/dpsutton/resize-window.svg)](https://github.com/dpsutton/resize-window/tags)
@@ -88,10 +88,11 @@ working in is overlaid, regardless of how many copies are open
 ## Hopeful upcoming features ##
 I can't promise any of these but these are the things I'm hoping to
 do:
+
 - put overlays over *other* buffers rather than current one. This
 greys out other workspaces and leaves yours with full color,
 bringing your eye there. Just seems like a nice ergonomic touch.
-- allow customization to invert capital/non-capital behavior. Right
+- DONE:allow customization to invert capital/non-capital behavior. Right
 now, lower case selections move the window size by 1 and upper-case
 moves by 5. These should both be easy to customize and easy to
 *flip*. Ie, make the lowercase `n` make it bigger by 5 and the
