@@ -34,3 +34,18 @@
 (ert-deftest should-identify-which-allow-capital-matching ()
   (should (rw-allows-capitals choice-capital))
   (should-not (rw-allows-capitals choice-no-capital)))
+
+;;; tests for swapping uppercase and lowercase behavior
+(ert-deftest rw-swap-capital-and-lowercase-behavior-swaps ()
+  (let ((rw-swap-capital-and-lowercase-behavior t))
+    (should (equal rw-coarse-argument
+                   (rw-lowercase-argument)))
+    (should (equal rw-fine-argument
+                   (rw-uppercase-argument)))))
+
+(ert-deftest rw-swap-capital-and-lowercase-behavior-ignored ()
+  (let ((rw-swap-capital-and-lowercase-behavior))
+    (should (equal rw-coarse-argument
+                   (rw-uppercase-argument)))
+    (should (equal rw-fine-argument
+                   (rw-lowercase-argument)))))

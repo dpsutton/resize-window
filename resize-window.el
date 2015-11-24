@@ -49,11 +49,11 @@
   :group 'convenience
   :prefix "rw-")
 
-(defcustom rw-capital-argument 5
+(defcustom rw-coarse-argument 5
   "Set how big a capital letter movement is."
   :type 'integer)
 
-(defcustom rw-default-argument 1
+(defcustom rw-fine-argument 1
   "Set how big the default movement should be."
   :type 'integer)
 
@@ -62,12 +62,33 @@
 This is also valuable to see that you are in resize mode."
   :type 'boolean)
 
+(defcustom rw-swap-capital-and-lowercase-behavior nil
+  "Reverse default behavior of lower case and uppercase arguments.")
+
 (defvar rw-background-overlay ()
   "Holder for background overlay.")
 
 (defface rw-background
   '((t (:foreground "gray40")))
   "Face for when resizing window.")
+
+(defun rw-lowercase-argument ()
+  "Return the behavior for lowercase entries.
+Example, normally n maps to enlarge vertically by 1. However,
+if you have swapped capital and lowercase behavior, then
+this should return the coarse adjustment."
+  (if rw-swap-capital-and-lowercase-behavior
+      rw-coarse-argument
+    rw-fine-argument))
+
+(defun rw-uppercase-argument ()
+  "Return the behavior for uppercase entries.
+Example, normally N maps to enlarge vertically by 5. However,
+if you have swapped capital and lowercase behavior, then this
+should return the fine adjustment (default 1)."
+  (if rw-swap-capital-and-lowercase-behavior
+      rw-fine-argument
+    rw-coarse-argument))
 
 (defvar rw-dispatch-alist
   '((?n rw-enlarge-down          " Resize - Expand down" t)
@@ -135,7 +156,7 @@ If SCALED, then call action with the rw-capital-argument."
   (let ((action (cadr choice))
         (description (car (cdr (cdr choice)))))
     (if scaled
-        (funcall action rw-capital-argument)
+        (funcall action (rw-uppercase-argument))
       (funcall action))
     (unless (equal (car choice) ??)
       (message "%s" description))))
@@ -165,6 +186,9 @@ to enlarge right."
         (cond
          (choice (rw-execute-action choice))
          ((and capital (rw-allows-capitals capital))
+          ;; rather than pass an argument, we tell it to "scale" it
+          ;; with t and that method can worry about how to get that
+          ;; action
           (rw-execute-action capital t))
          (t (setq reading-characters nil)
             (delete-overlay rw-background-overlay)))))))
@@ -173,22 +197,22 @@ to enlarge right."
 (defun rw-enlarge-down (&optional size)
   "Extend the current window downwards by optional SIZE.
 If no SIZE is given, extend by `rw-default-argument`"
-  (let ((size (or size rw-default-argument)))
+  (let ((size (or size (rw-lowercase-argument))))
     (enlarge-window size)))
 
 (defun rw-enlarge-up (&optional size)
   "Bring bottom edge back up by one or optional SIZE."
-  (let ((size (or size rw-default-argument)))
+  (let ((size (or size (rw-lowercase-argument))))
     (enlarge-window (- size))))
 
 (defun rw-enlarge-horizontally (&optional size)
   "Enlarge the window horizontally by one or optional SIZE."
-  (let ((size (or size rw-default-argument)))
+  (let ((size (or size (rw-lowercase-argument))))
     (enlarge-window size t)))
 
 (defun rw-shrink-horizontally (&optional size)
   "Shrink the window horizontally by one or optional SIZE."
-  (let ((size (or size rw-default-argument)))
+  (let ((size (or size (rw-lowercase-argument))))
     (enlarge-window (- size) t)))
 
 (defun rw-reset-windows ()
