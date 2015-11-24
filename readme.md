@@ -91,11 +91,6 @@ do:
 - put overlays over *other* buffers rather than current one. This
 greys out other workspaces and leaves yours with full color,
 bringing your eye there. Just seems like a nice ergonomic touch.
-- make into a true minor mode. Right now, its kinda straddling a minor
-mode and just a function. In fact, i'm not sure that it needs to be
-a minor mode, just needs to have a nice keybinding. But the things
-that are calling my name for it being a minor mode are easily
-customized variables, etc
 - allow customization to invert capital/non-capital behavior. Right
 now, lower case selections move the window size by 1 and upper-case
 moves by 5. These should both be easy to customize and easy to
