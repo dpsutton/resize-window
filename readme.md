@@ -52,13 +52,26 @@ it.
 
 ## How to extend it ##
 There are a few things that you can do. There are customizable variables:
-- rw-capital-argument (default: 5)
-- rw-default-argument (default: 1)
-- rw-alow-backgrounds (default: t)
+- rw-coarse-argument (default: 5)
+- rw-fine-argument (default: 1)
+- rw-allow-backgrounds (default: t)
 
 Any of these can be customized by using `customize-group RET
 resize-window` or by setting the appropriate variable in your init.el
 file as normal: `(setq <var> <val>)`.
+
+## What's even cooler ##
+At the end of the day, this is really just a function dispatcher
+listening for key presses. So i've found a really nice workflow. I've
+bound resize-window to `C-c ;` and i've also added a new dispatch:
+
+    (push '(?l helm-mini "run helm-mini" nil) rw-dispatch-alist)
+
+This allows for a really nice workflow. Now with `w` it is really easy
+to bounce around windows, use keys to enlarge them, and then hit l to
+run helm-mini. Its trivial now to bounce around, resize windows and
+reset their sources. And since the help menu is dynamically generated,
+pressing ? displays this new choice automatically.
 
 Further, there are alias, held in the `rw-alias-list` alist. It is
 currently defined as
