@@ -26,8 +26,10 @@
 
 (ert-deftest should-execute-and-display-message ()
   (let ((choice '(?n (lambda () (setq executed t)) "doc" nil))
-        (executed)
-        (message-received ""))
+        rw-notify-with-messages             ;suppress messages
+        (rw-notify)
+        (message-written)
+        (executed))
     (rw-execute-action choice)
     (should (equal executed t))))
 

@@ -65,6 +65,10 @@ This is also valuable to see that you are in resize mode."
 (defcustom rw-swap-capital-and-lowercase-behavior nil
   "Reverse default behavior of lower case and uppercase arguments.")
 
+(defcustom rw-notify-with-messages t
+  "Show notifications in message bar."
+  :type 'boolean)
+
 (defvar rw-background-overlay ()
   "Holder for background overlay.")
 
@@ -110,6 +114,12 @@ Main data structure of the dispatcher with the form:
     (down ?p))
   "List of aliases for commands.
 Rather than have to use n, etc, you can alias keys for others.")
+
+(defun rw-notify (&rest info)
+  "Notify with INFO, a string.
+This is just a pass through to message usually.  However, it can be
+overridden in tests to test the output of message."
+  (when rw-notify-with-messages (apply #'message info)))
 
 (defun rw-match-alias (key)
   "Taken the KEY or keyboard selection from `read-key` check for alias.
@@ -159,7 +169,7 @@ If SCALED, then call action with the rw-capital-argument."
         (funcall action (rw-uppercase-argument))
       (funcall action))
     (unless (equal (car choice) ??)
-      (message "%s" description))))
+      (rw-notify "%s" description))))
 
 (defun rw-allows-capitals (choice)
   "To save time typing, we will tell whether we allow capitals for scaling.
@@ -175,7 +185,7 @@ Press n to enlarge down, p to enlarge up, b to enlarge left and f
 to enlarge right."
   (interactive)
   (setq rw-background-overlay (rw-make-background))
-  (message "Resize mode: enter character, ? for help")
+  (rw-notify "Resize mode: enter character, ? for help")
   (let ((reading-characters t)
         ;; allow mini-buffer to collapse after displaying menu
         (resize-mini-windows t))
@@ -233,7 +243,7 @@ If no SIZE is given, extend by `rw-default-argument`"
 
 (defun rw-display-menu ()
   "Display menu in minibuffer."
-  (message "%s" (rw-get-documentation-strings)))
+  (rw-notify "%s" (rw-get-documentation-strings)))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
