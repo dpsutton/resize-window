@@ -69,7 +69,7 @@ This is also valuable to see that you are in resize mode."
   "Show notifications in message bar."
   :type 'boolean)
 
-(defvar resize-window-background-overlay ()
+(defvar resize-window--background-overlay ()
   "Holder for background overlay.")
 
 (defface resize-window-background
@@ -95,14 +95,14 @@ should return the fine adjustment (default 1)."
     resize-window-coarse-argument))
 
 (defvar resize-window-dispatch-alist
-  '((?n resize-window-enlarge-down          " Resize - Expand down" t)
-    (?p resize-window-enlarge-up            " Resize - Expand up" t)
-    (?f resize-window-enlarge-horizontally  " Resize - horizontally" t)
-    (?b resize-window-shrink-horizontally   " Resize - shrink horizontally" t)
-    (?r resize-window-reset-windows         " Resize - reset window layour" nil)
-    (?w resize-window-cycle-window-positive " Resize - cycle window" nil)
-    (?W resize-window-cycle-window-negative " Resize - cycle window" nil)
-    (?? resize-window-display-menu          " Resize - display menu" nil))
+  '((?n resize-window--enlarge-down          " Resize - Expand down" t)
+    (?p resize-window--enlarge-up            " Resize - Expand up" t)
+    (?f resize-window--enlarge-horizontally  " Resize - horizontally" t)
+    (?b resize-window--shrink-horizontally   " Resize - shrink horizontally" t)
+    (?r resize-window--reset-windows         " Resize - reset window layour" nil)
+    (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
+    (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
+    (?? resize-window--display-menu          " Resize - display menu" nil))
   "List of actions for `resize-window-dispatch-default.
 Main data structure of the dispatcher with the form:
 \(char function documentation match-capitals\)")
@@ -115,13 +115,13 @@ Main data structure of the dispatcher with the form:
   "List of aliases for commands.
 Rather than have to use n, etc, you can alias keys for others.")
 
-(defun resize-window-notify (&rest info)
+(defun resize-window--notify (&rest info)
   "Notify with INFO, a string.
 This is just a pass through to message usually.  However, it can be
 overridden in tests to test the output of message."
   (when resize-window-notify-with-messages (apply #'message info)))
 
-(defun resize-window-match-alias (key)
+(defun resize-window--match-alias (key)
   "Taken the KEY or keyboard selection from `read-key` check for alias.
 Match the KEY against the alias table.  If found, return the value that it
 points to, which should be a key in the resize-window-dispatch-alist.
@@ -131,25 +131,25 @@ Otherwise, return the key."
         (car (cdr alias))
       key)))
 
-(defun resize-window-display-choice (choice)
+(defun resize-window--display-choice (choice)
   "Formats screen message about CHOICE.
 CHOICE is a \(key function description allows-capital\)."
-  (format "%s: %s " (if (resize-window-allows-capitals choice)
+  (format "%s: %s " (if (resize-window--allows-capitals choice)
                         (format "%s|%s"
                                 (string (car choice))
                                 (string (- (car choice) 32)))
                       (string (car choice)))
           (car (cdr (cdr choice)))))
 
-(defun resize-window-get-documentation-strings ()
+(defun resize-window--get-documentation-strings ()
   "Get all documentation strings for display."
   (let ((documentation ""))
     (dolist (choice resize-window-dispatch-alist)
       (setq documentation
-            (concat (resize-window-display-choice choice) "\n" documentation)))
+            (concat (resize-window--display-choice choice) "\n" documentation)))
     documentation))
 
-(defun resize-window-make-background ()
+(defun resize-window--make-background ()
   "Place a background over the current window."
   (when resize-window-allow-backgrounds
     (let ((ol (make-overlay
@@ -159,7 +159,7 @@ CHOICE is a \(key function description allows-capital\)."
       (overlay-put ol 'face 'resize-window-background)
       ol)))
 
-(defun resize-window-execute-action (choice &optional scaled)
+(defun resize-window--execute-action (choice &optional scaled)
   "Given a CHOICE, grab values out of the alist.
 If SCALED, then call action with the resize-window-capital-argument."
   ;; (char function description)
@@ -169,9 +169,9 @@ If SCALED, then call action with the resize-window-capital-argument."
         (funcall action (resize-window-uppercase-argument))
       (funcall action))
     (unless (equal (car choice) ??)
-      (resize-window-notify "%s" description))))
+      (resize-window--notify "%s" description))))
 
-(defun resize-window-allows-capitals (choice)
+(defun resize-window--allows-capitals (choice)
   "To save time typing, we will tell whether we allow capitals for scaling.
 To do so, we check to see whether CHOICE allows for capitals by
 checking its last spot in the list for whether it is true or
@@ -184,66 +184,66 @@ nil."
 Press n to enlarge down, p to enlarge up, b to enlarge left and f
 to enlarge right."
   (interactive)
-  (setq resize-window-background-overlay (resize-window-make-background))
-  (resize-window-notify "Resize mode: enter character, ? for help")
+  (setq resize-window--background-overlay (resize-window--make-background))
+  (resize-window--notify "Resize mode: enter character, ? for help")
   (let ((reading-characters t)
         ;; allow mini-buffer to collapse after displaying menu
         (resize-mini-windows t))
     (while reading-characters
-      (let* ((char (resize-window-match-alias (read-key)))
+      (let* ((char (resize-window--match-alias (read-key)))
              (choice (assoc char resize-window-dispatch-alist))
              (capital (assoc (+ char 32) resize-window-dispatch-alist)))
         (cond
-         (choice (resize-window-execute-action choice))
-         ((and capital (resize-window-allows-capitals capital))
+         (choice (resize-window--execute-action choice))
+         ((and capital (resize-window--allows-capitals capital))
           ;; rather than pass an argument, we tell it to "scale" it
           ;; with t and that method can worry about how to get that
           ;; action
-          (resize-window-execute-action capital t))
+          (resize-window--execute-action capital t))
          (t (setq reading-characters nil)
-            (delete-overlay resize-window-background-overlay)))))))
+            (delete-overlay resize-window--background-overlay)))))))
 
 ;;; Function Handlers
-(defun resize-window-enlarge-down (&optional size)
+(defun resize-window--enlarge-down (&optional size)
   "Extend the current window downwards by optional SIZE.
 If no SIZE is given, extend by `resize-window-default-argument`"
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window size)))
 
-(defun resize-window-enlarge-up (&optional size)
+(defun resize-window--enlarge-up (&optional size)
   "Bring bottom edge back up by one or optional SIZE."
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window (- size))))
 
-(defun resize-window-enlarge-horizontally (&optional size)
+(defun resize-window--enlarge-horizontally (&optional size)
   "Enlarge the window horizontally by one or optional SIZE."
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window size t)))
 
-(defun resize-window-shrink-horizontally (&optional size)
+(defun resize-window--shrink-horizontally (&optional size)
   "Shrink the window horizontally by one or optional SIZE."
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window (- size) t)))
 
-(defun resize-window-reset-windows ()
+(defun resize-window--reset-windows ()
   "Reset window layout to even spread."
   (balance-windows))
 
-(defun resize-window-cycle-window-positive ()
+(defun resize-window--cycle-window-positive ()
   "Cycle windows."
-  (delete-overlay resize-window-background-overlay)
+  (delete-overlay resize-window--background-overlay)
   (other-window 1)
-  (setq resize-window-background-overlay (resize-window-make-background)))
+  (setq resize-window--background-overlay (resize-window--make-background)))
 
-(defun resize-window-cycle-window-negative ()
+(defun resize-window--cycle-window-negative ()
   "Cycle windows negative."
-  (delete-overlay resize-window-background-overlay)
+  (delete-overlay resize-window--background-overlay)
   (other-window -1)
-  (setq resize-window-background-overlay (resize-window-make-background)))
+  (setq resize-window--background-overlay (resize-window--make-background)))
 
-(defun resize-window-display-menu ()
+(defun resize-window--display-menu ()
   "Display menu in minibuffer."
-  (resize-window-notify "%s" (resize-window-get-documentation-strings)))
+  (resize-window--notify "%s" (resize-window--get-documentation-strings)))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
