@@ -65,7 +65,7 @@ At the end of the day, this is really just a function dispatcher
 listening for key presses. So i've found a really nice workflow. I've
 bound resize-window to `C-c ;` and i've also added a new dispatch:
 
-    (push '(?l helm-mini "run helm-mini" nil) rw-dispatch-alist)
+    (push '(?l helm-mini "run helm-mini" nil) resize-window-dispatch-alist)
 
 This allows for a really nice workflow. Now with `w` it is really easy
 to bounce around windows, use keys to enlarge them, and then hit l to
@@ -73,11 +73,11 @@ run helm-mini. Its trivial now to bounce around, resize windows and
 reset their sources. And since the help menu is dynamically generated,
 pressing ? displays this new choice automatically.
 
-Further, there are alias, held in the `rw-alias-list` alist. It is
+Further, there are alias, held in the `resize-window-alias-list` alist. It is
 currently defined as
 
 
-    (defvar rw-alias-list
+    (defvar resize-windown-alias-list
       '((right ?f)
         (up ?n)
         (left ?b)
@@ -121,7 +121,7 @@ to their package.
 
 ## How it works ##
 Super simple architecture. There's an associative list called
-`rm-dispatch-alist` (the rm is prefix for resize-mode) that holds a
+`resize-window-dispatch-alist` (the rm is prefix for resize-mode) that holds a
 simple data structure with the invocation-key, the function to call,
 documentation string to be shown as a message, and whether it should
 accept a capital letter as well as the lower-case letter.
@@ -131,5 +131,6 @@ characters, checking if that character is associated to anything in
 the list and checking if `(+ char 32)` is associated to anything in
 the list (which is just the uppercase version (or is it? now its a
 bug)). If lower case matches, do it, if uppercase matches something,
-then make sure that's ok and do it but with the `rm-capital-argument`
-rather than `rm-default-argument`.
+then make sure that's ok and do it but with the
+`resize-window-capital-argument` rather than
+`resize-window-default-argument`.
