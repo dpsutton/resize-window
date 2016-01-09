@@ -86,7 +86,7 @@ currently defined as
     Rather than have to use n, etc, you can alias keys for others.")
 
 However, you can easily add your own. For instance, to alias h to ?,
-the help command, just add `(push '(?h ??) rw-alias-list)` in your init.el.
+the help command, just add `(push '(?h ??) resize-window-alias-list)` in your init.el.
 
 
 ![usage gif](resize-mode.gif)
