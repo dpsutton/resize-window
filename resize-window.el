@@ -192,7 +192,8 @@ to enlarge right."
     (while reading-characters
       (let* ((char (resize-window--match-alias (read-key)))
              (choice (assoc char resize-window-dispatch-alist))
-             (capital (assoc (+ char 32) resize-window-dispatch-alist)))
+             (capital (when (numberp char) 
+                        (assoc (+ char 32) resize-window-dispatch-alist))))
         (cond
          (choice (resize-window--execute-action choice))
          ((and capital (resize-window--allows-capitals capital))
