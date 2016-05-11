@@ -99,7 +99,7 @@ should return the fine adjustment (default 1)."
     (?p resize-window--enlarge-up            " Resize - Expand up" t)
     (?f resize-window--enlarge-horizontally  " Resize - horizontally" t)
     (?b resize-window--shrink-horizontally   " Resize - shrink horizontally" t)
-    (?r resize-window--reset-windows         " Resize - reset window layour" nil)
+    (?r resize-window--reset-windows         " Resize - reset window layout" nil)
     (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
     (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
     (?? resize-window--display-menu          " Resize - display menu" nil))
