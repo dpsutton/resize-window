@@ -63,7 +63,8 @@ This is also valuable to see that you are in resize mode."
   :type 'boolean)
 
 (defcustom resize-window-swap-capital-and-lowercase-behavior nil
-  "Reverse default behavior of lower case and uppercase arguments.")
+  "Reverse default behavior of lower case and uppercase arguments."
+  :type 'boolean)
 
 (defcustom resize-window-notify-with-messages t
   "Show notifications in message bar."
