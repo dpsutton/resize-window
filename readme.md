@@ -40,6 +40,9 @@ and they mimic the normal motions in emacs.
 - `r`: reset window layout to standard
 - `w`: cycle through windows so that you can adjust other window
 panes. `W` cycles in the opposite direction.
+- `2`: create a new horizontal split
+- `3`: create a new vertical split
+- `0`: delete the current window
 - `?`: Display menu listing commands
 
 The best part of this is that resize-window keeps listening for more
@@ -52,9 +55,9 @@ it.
 
 ## How to extend it ##
 There are a few things that you can do. There are customizable variables:
-- rw-coarse-argument (default: 5)
-- rw-fine-argument (default: 1)
-- rw-allow-backgrounds (default: t)
+- resize-window-coarse-argument (default: 5)
+- resize-window-fine-argument (default: 1)
+- resizewindow-allow-backgrounds (default: t)
 
 Any of these can be customized by using `customize-group RET
 resize-window` or by setting the appropriate variable in your init.el
