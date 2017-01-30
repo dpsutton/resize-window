@@ -5,17 +5,20 @@
 
 ;;; Code:
 
-(defvar choice-no-capital '(?n 'function "documentation" nil))
-(defvar choice-capital '(?n 'function "documentation" t))
+(defmacro aliases=> (alias original)
+  `(should (equal ,original (resize-window--match-alias ,alias))))
 
 (ert-deftest should-match-aliases ()
-  (should (equal ?f (resize-window--match-alias 'right)))
-  (should (equal ?b (resize-window--match-alias 'left)))
-  (should (equal ?n (resize-window--match-alias 'up)))
-  (should (equal ?p (resize-window--match-alias 'down))))
+  (aliases=> 'right ?f)
+  (aliases=> 'left ?b)
+  (aliases=> 'up ?n)
+  (aliases=> 'down ?p))
 
 (ert-deftest should-return-original-if-no-alias ()
-  (should (equal ?d (resize-window--match-alias ?d))))
+  (aliases=> ?d ?d))
+
+(defvar choice-no-capital '(?n 'function "documentation" nil))
+(defvar choice-capital '(?n 'function "documentation" t))
 
 (ert-deftest should-create-documentation-from-alist ()
   (should (equal "n: documentation "
@@ -28,7 +31,7 @@
         resize-window-notify-with-messages             ;suppress messages
         (executed))
     (resize-window--execute-action choice)
-    (should (equal executed t))))
+    (should executed)))
 
 (ert-deftest should-identify-which-allow-capital-matching ()
   (should (resize-window--allows-capitals choice-capital))
