@@ -102,6 +102,9 @@ should return the fine adjustment (default 1)."
     (?r resize-window--reset-windows         " Resize - reset window layout" nil)
     (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
     (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
+    (?2 split-window-below " Split window horizontally" nil)
+    (?3 split-window-right " Slit window vertically" nil)
+    (?0 delete-window " Delete window" nil)
     (?? resize-window--display-menu          " Resize - display menu" nil))
   "List of actions for `resize-window-dispatch-default.
 Main data structure of the dispatcher with the form:
