@@ -7,7 +7,7 @@
 ;; URL: https://github.com/dpsutton/resize-mode
 
 ;; Version: 0.1.0
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: window, resize
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -44,6 +44,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defgroup resize-window nil
   "Quickly resize current window"
   :group 'convenience
@@ -63,7 +65,8 @@ This is also valuable to see that you are in resize mode."
   :type 'boolean)
 
 (defcustom resize-window-swap-capital-and-lowercase-behavior nil
-  "Reverse default behavior of lower case and uppercase arguments.")
+  "Reverse default behavior of lower case and uppercase arguments."
+  :type 'boolean)
 
 (defcustom resize-window-notify-with-messages t
   "Show notifications in message bar."
@@ -165,10 +168,10 @@ CHOICE is a \(key function description allows-capital\)."
             (resize-window--choice-documentation choice))))
 
 (defun resize-window--get-documentation-strings ()
-  (reduce (lambda (c1 c2)
-            (concat c1 c2 "\n"))
-          (mapcar 'resize-window--display-choice
-                  resize-window-dispatch-alist)))
+  (cl-reduce (lambda (c1 c2)
+               (concat c1 c2 "\n"))
+             (mapcar 'resize-window--display-choice
+                     resize-window-dispatch-alist)))
 
 (defun resize-window--make-background ()
   "Place a background over the current window."
