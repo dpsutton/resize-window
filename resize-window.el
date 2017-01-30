@@ -104,7 +104,7 @@ should return the fine adjustment (default 1)."
     (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
     (?2 split-window-below " Split window horizontally" nil)
     (?3 split-window-right " Slit window vertically" nil)
-    (?0 delete-window " Delete window" nil)
+    (?0 resize-window--delete-window " Delete window" nil)
     (?? resize-window--display-menu          " Resize - display menu" nil))
   "List of actions for `resize-window-dispatch-default.
 Main data structure of the dispatcher with the form:
@@ -259,6 +259,11 @@ If no SIZE is given, extend by `resize-window-default-argument`"
 (defun resize-window--display-menu ()
   "Display menu in minibuffer."
   (resize-window--notify "%s" (resize-window--get-documentation-strings)))
+
+(defun resize-window--delete-window ()
+  (delete-overlay resize-window--background-overlay)
+  (delete-window)
+  (setq resize-window--background-overlay (resize-window--make-background)))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
