@@ -92,7 +92,8 @@ However, you can easily add your own. For instance, to alias h to ?,
 the help command, just add `(push '(?h ??) resize-window-alias-list)` in your init.el.
 
 
-![usage gif](resize-mode.gif)
+![usage gif](images/kill_windows.gif)
+![usage gif](images/navigate.gif)
 
 ## Bugs ##
 - When in resize mode, there's a visual overlay over the current
