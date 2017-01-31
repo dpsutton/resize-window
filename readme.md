@@ -91,8 +91,26 @@ currently defined as
 However, you can easily add your own. For instance, to alias h to ?,
 the help command, just add `(push '(?h ??) resize-window-alias-list)` in your init.el.
 
+### Kill and restore windows ##
 
 ![usage gif](images/kill_windows.gif)
+
+In this example, we can bounce back and forth between the test and
+code of resize-window. When we want to work in one exclusively, we
+call up resize-window (bound with `C-c ;` and then hit `k` for kill
+all the other windows. We edit our tests and then call up
+resize-window and hit `y` for yank. Think that we just put them into a
+ring buffer, but they are actually in a stack.
+
+## Create windows ##
+
+Here, we want to create a bunch of windows. We can use `2` and `3` to
+make splits like their native emacs commands `C-x 2` and `C-x 3`. Use
+`0` to kill the split. If you want to go down to a single, use the
+example above to hit `k` to kill all and then `y` to restore. Again,
+all of the buffer resizing commands work (`f`, `p`, `b`, `n`) to
+resize these buffers.
+
 ![usage gif](images/navigate.gif)
 
 ## Bugs ##
