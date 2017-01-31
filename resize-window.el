@@ -34,13 +34,27 @@
 ;; to resize again, but just keep using standard motions until you are
 ;; happy.
 
-;; All of the work is done inside of resize-window.  Its just a while
-;; loop that keeps looping over character input until it doesn't
-;; recognize an option or an allowable capital.  The dispatch alist has
-;; a character code to look for, a function to invoke, a string for
-;; display and whether to match against capital letters.  If so, it is
-;; invoked with the default capital argument rather than the default
-;; argument.
+;; But, just run `M-x resize-window`. There are only a few commands to learn,
+;; and they mimic the normal motions in emacs.
+
+;;   n : Makes the window vertically bigger, think scrolling down. Use
+;;        N  to enlarge 5 lines at once.
+;;   p : Makes the window vertically smaller, again, like scrolling. Use
+;;        P  to shrink 5 lines at once.
+;;   f : Makes the window horizontally bigger, like scrolling forward;
+;;        F  for five lines at once.
+;;   b : window horizontally smaller,  B  for five lines at once.
+;;   r : reset window layout to standard
+;;   w : cycle through windows so that you can adjust other window
+;;       panes.  W  cycles in the opposite direction.
+;;   2 : create a new horizontal split
+;;   3 : create a new vertical split
+;;   0 : delete the current window
+;;   k : kill all buffers and put window config on the stack
+;;   y : make the window configuration according to the last config
+;;   pushed onto the stack
+;;   ? : Display menu listing commands
+
 
 ;;; Code:
 
