@@ -75,6 +75,9 @@ This is also valuable to see that you are in resize mode."
 (defvar resize-window--background-overlay ()
   "Holder for background overlay.")
 
+(defvar resize-window--window-stack ()
+  "Stack for holding window configurations.")
+
 (defface resize-window-background
   '((t (:foreground "gray40")))
   "Face for when resizing window.")
@@ -108,6 +111,8 @@ should return the fine adjustment (default 1)."
     (?2 split-window-below " Split window horizontally" nil)
     (?3 split-window-right " Slit window vertically" nil)
     (?0 resize-window--delete-window " Delete window" nil)
+    (?k resize-window--kill-other-windows " Kill other windows (save state)" nil)
+    (?y resize-window--restore-windows " (when state) Restore window configuration" nil)
     (?? resize-window--display-menu          " Resize - display menu" nil))
   "List of actions for `resize-window-dispatch-default.
 Main data structure of the dispatcher with the form:
@@ -247,6 +252,12 @@ If no SIZE is given, extend by `resize-window-default-argument`"
   "Reset window layout to even spread."
   (balance-windows))
 
+(defun resize-window--delete-overlays ()
+  (delete-overlay resize-window--background-overlay))
+
+(defun resize-window--create-overlay ()
+  (setq resize-window--background-overlay (resize-window--make-background)))
+
 (defun resize-window--cycle-window-positive ()
   "Cycle windows."
   (delete-overlay resize-window--background-overlay)
@@ -267,6 +278,24 @@ If no SIZE is given, extend by `resize-window-default-argument`"
   (delete-overlay resize-window--background-overlay)
   (delete-window)
   (setq resize-window--background-overlay (resize-window--make-background)))
+
+(defun resize-window--window-push ()
+  (push (current-window-configuration) resize-window--window-stack))
+
+(defun resize-window--window-pop ()
+  (pop resize-window--window-stack))
+
+(defun resize-window--kill-other-windows ()
+  (resize-window--delete-overlays)
+  (resize-window--window-push)
+  (delete-other-windows)
+  (resize-window--create-overlay))
+
+(defun resize-window--restore-windows ()
+  (when-let ((config (resize-window--window-pop)))
+    (resize-window--delete-overlays)
+    (set-window-configuration config)
+    (resize-window--create-overlay)))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
