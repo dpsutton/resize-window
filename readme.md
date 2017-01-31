@@ -43,6 +43,9 @@ panes. `W` cycles in the opposite direction.
 - `2`: create a new horizontal split
 - `3`: create a new vertical split
 - `0`: delete the current window
+- `k`: kill all buffers and put window config on the stack
+- `y`: make the window configuration according to the last config
+  pushed onto the stack
 - `?`: Display menu listing commands
 
 The best part of this is that resize-window keeps listening for more
