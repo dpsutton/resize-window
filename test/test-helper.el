@@ -38,5 +38,4 @@
 (require 'ert)
 (require 'resize-window)
 
-(provide 'test-helper)
 ;;; test-helper.el ends here
