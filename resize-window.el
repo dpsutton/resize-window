@@ -306,10 +306,11 @@ If no SIZE is given, extend by `resize-window-default-argument`"
   (resize-window--create-overlay))
 
 (defun resize-window--restore-windows ()
-  (when-let ((config (resize-window--window-pop)))
-    (resize-window--delete-overlays)
-    (set-window-configuration config)
-    (resize-window--create-overlay)))
+  (let ((config (resize-window--window-pop)))
+    (when config
+      (resize-window--delete-overlays)
+      (set-window-configuration config)
+      (resize-window--create-overlay))))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
