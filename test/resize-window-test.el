@@ -31,7 +31,12 @@
         resize-window-notify-with-messages             ;suppress messages
         (executed))
     (resize-window--execute-action choice)
-    (should executed)))
+    (should executed))
+
+  (let ((bad-arity '(?n (lambda (a b c) 1) "doc" nil))
+        resize-window-notify-with-messages)
+    ;; this is a bad arity test. it should not error.
+    (resize-window--execute-action bad-arity)))
 
 (ert-deftest should-identify-which-allow-capital-matching ()
   (should (resize-window--allows-capitals choice-capital))
