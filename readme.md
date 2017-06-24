@@ -79,6 +79,15 @@ run helm-mini. Its trivial now to bounce around, resize windows and
 reset their sources. And since the help menu is dynamically generated,
 pressing ? displays this new choice automatically.
 
+For convenience sake, you can use the helper method `resize-window-add-choice` to register your function without having to remember the structure of the list it will end up in. For example:
+
+    (push '(?h (lambda () (dired "~/projects/clojure")) "Clojure home" nil))
+    ; is equivalent to
+
+    (resize-window-add-choice ?h (lambda () (dired "~/projects/clojure")) "Clojure home")
+
+    ; the allows-capitals argument is optional.
+
 Further, there are alias, held in the `resize-window-alias-list` alist. It is
 currently defined as
 
