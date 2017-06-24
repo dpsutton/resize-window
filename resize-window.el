@@ -187,10 +187,9 @@ CHOICE is a \(key function description allows-capital\)."
             (resize-window--choice-documentation choice))))
 
 (defun resize-window--get-documentation-strings ()
-  (cl-reduce (lambda (c1 c2)
-               (concat c1 c2 "\n"))
-             (mapcar 'resize-window--display-choice
-                     resize-window-dispatch-alist)))
+  (mapconcat #'identity (mapcar 'resize-window--display-choice
+                              resize-window-dispatch-alist)
+             "\n"))
 
 (defun resize-window--make-background ()
   "Place a background over the current window."
@@ -311,6 +310,25 @@ If no SIZE is given, extend by `resize-window-default-argument`"
       (resize-window--delete-overlays)
       (set-window-configuration config)
       (resize-window--create-overlay))))
+
+(defvar resize-window--capital-letters (number-sequence ?A ?Z))
+(defvar resize-window--lower-letters (number-sequence ?a ?z))
+
+(defun resize-window--key-available? (key)
+  (let ((keys (mapcar #'resize-window--choice-keybinding resize-window-dispatch-alist)))
+    (not (member key keys))))
+
+(defun resize-window-add-choice (key func doc &optional allows-capitals)
+  "Register a function for resize-window.
+KEY is the char (eg ?c) that should invoke the FUNC. DOC is a doc
+string for the help menu, and optional ALLOWS-CAPITALS should be
+t or nil. Functions should be of zero arity if they do not allow
+capitals, and should be of optional single arity if they allow
+capitals. Invoking with the capital will pass the capital
+argument."
+  (if (resize-window--key-available? key)
+      (push (list key func doc allows-capitals) resize-window-dispatch-alist)
+      (message "The `%s` key is already taken for resize-window." (char-to-string key))))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
