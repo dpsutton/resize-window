@@ -207,11 +207,16 @@ If SCALED, then call action with the resize-window-capital-argument."
   ;; (char function description)
   (let ((action (resize-window--choice-lambda choice))
         (description (resize-window--choice-documentation choice)))
-    (if scaled
-        (funcall action (resize-window-uppercase-argument))
-      (funcall action))
     (unless (equal (resize-window--choice-keybinding choice) ??)
-      (resize-window--notify "%s" description))))
+      (resize-window--notify "%s" description))
+    (condition-case nil
+     (if scaled
+         (funcall action (resize-window-uppercase-argument))
+       (funcall action))
+
+     (wrong-number-of-arguments
+      (message "Invalid arity in function for %s"
+               (char-to-string (resize-window--choice-keybinding choice)))))))
 
 ;;;###autoload
 (defun resize-window ()
