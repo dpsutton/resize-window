@@ -215,8 +215,9 @@ If SCALED, then call action with the resize-window-capital-argument."
        (funcall action))
 
      (wrong-number-of-arguments
-      (message "Invalid arity in function for %s"
-               (char-to-string (resize-window--choice-keybinding choice)))))))
+      (resize-window--notify "Invalid arity in function for %s"
+                             (char-to-string
+                              (resize-window--choice-keybinding choice)))))))
 
 ;;;###autoload
 (defun resize-window ()
