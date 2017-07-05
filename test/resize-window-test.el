@@ -11,8 +11,8 @@
 (ert-deftest should-match-aliases ()
   (aliases=> 'right ?f)
   (aliases=> 'left ?b)
-  (aliases=> 'up ?n)
-  (aliases=> 'down ?p))
+  (aliases=> 'up ?p)
+  (aliases=> 'down ?n))
 
 (ert-deftest should-return-original-if-no-alias ()
   (aliases=> ?d ?d))
