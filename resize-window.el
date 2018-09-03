@@ -133,7 +133,7 @@ should return the fine adjustment (default 1)."
     (?0 resize-window--delete-window " Delete window" nil)
     (?k resize-window--kill-other-windows " Kill other windows (save state)" nil)
     (?y resize-window--restore-windows " (when state) Restore window configuration" nil)
-    (?? resize-window--display-menu          " Resize - display menu" nil))
+    (?? resize-window--display-menu          " Resize - toggle help menu" nil))
   "List of resize mode bindings.
 Main data structure of the dispatcher with the form:
 \(key function documentation allows-capitals\)")
@@ -260,9 +260,12 @@ to resize right."
               ;; with t and that method can worry about how to get that
               ;; action
               (resize-window--execute-action capital t))
-             (t (setq reading-characters nil)
-                (resize-window--remove-backgrounds))))))
+             (t
+              (setq reading-characters nil)
+              (resize-window--display-menu 'kill)
+              (resize-window--remove-backgrounds))))))
     (quit
+     (resize-window--display-menu 'kill)
      (resize-window--remove-backgrounds))))
 
 ;;; Function Handlers
@@ -312,9 +315,33 @@ If no SIZE is given, modify by `resize-window-default-argument'"
   (other-window -1)
   (resize-window--add-backgrounds))
 
-(defun resize-window--display-menu ()
-  "Display menu in minibuffer."
-  (resize-window--notify "%s" (resize-window--get-documentation-strings)))
+(defun resize-window--display-menu (&optional action)
+  "Toggle help menu side window or perform ACTION if non-nil.
+ACTION is a symbol of value 'kill or 'open."
+  (let* ((buffer (get-buffer-create "*Resize-Window-Help*"))
+         (window (get-buffer-window buffer))
+         (add-backgrounds nil))
+    (cond
+     ((and window (or (not action) (eq action 'kill)))
+      (quit-window t window)
+      (setq add-backgrounds t))
+     ((and (not window) (or (not action) (eq action 'open)))
+      (setq window (display-buffer-in-side-window buffer nil))
+      (set-window-parameter window 'no-other-window t)
+      (set-window-parameter window 'no-delete-other-windows t)
+      (with-current-buffer buffer
+        (setq buffer-read-only t)
+        (setq window-size-fixed t)
+        (let ((inhibit-read-only t)
+              (window-size-fixed nil))
+          (erase-buffer)
+          (insert (resize-window--get-documentation-strings))
+          (fit-window-to-buffer window)))
+      (setq add-backgrounds t)))
+    ;; NOTE: Just in case the help menu was selected (it shouldn't)
+    ;; refresh the backgrounds even when the help menu is killed.
+    (when add-backgrounds
+      (resize-window--add-backgrounds))))
 
 (defun resize-window--split-window-below ()
   "Split the window vertically."
@@ -332,9 +359,42 @@ If no SIZE is given, modify by `resize-window-default-argument'"
     (delete-window)
     (resize-window--add-backgrounds)))
 
+(defun resize-window--window-config ()
+  "Return the current window configuration.
+Exclude the help menu from the configuration."
+  (let ((display-menu (get-buffer-window "*Resize-Window-Help*")))
+    (resize-window--display-menu 'kill)
+    (prog2
+        ;; WORKAROUND: Calling `current-buffer' or `get-buffer-window'
+        ;; soon after `ivy-switch-buffer' references the old buffer.
+        ;; This forces to update to the buffer switched to.  It also
+        ;; allows `current-window-configuration' to capture a proper
+        ;; configuration updating the values of all current buffers.
+        ;; See also https://github.com/abo-abo/swiper/issues/1766
+        (let ((curr-window (selected-window)))
+          (mapc (lambda (w) (select-window w)) (window-list))
+          (select-window curr-window))
+        (current-window-configuration)
+      (when display-menu
+        (resize-window--display-menu 'open)))))
+
+(defun resize-window--restore-config (config)
+  "Restore the window configuration CONFIG then return it.
+Restore the help menu only if it is currently open."
+  (let ((display-menu (get-buffer-window "*Resize-Window-Help*")))
+    (set-window-configuration config)
+    ;; NOTE: If `resize-window--window-config' was used to save the
+    ;; CONFIG there is no help menu to kill. Keep this just in case.
+    (resize-window--display-menu 'kill)
+    (prog1
+        (current-window-configuration)
+      (if display-menu
+          (resize-window--display-menu 'open)
+        (resize-window--add-backgrounds)))))
+
 (defun resize-window--window-push ()
   "Save the current state in the stack."
-  (push (current-window-configuration) resize-window--window-stack))
+  (push (resize-window--window-config) resize-window--window-stack))
 
 (defun resize-window--window-pop ()
   "Return the first element and remove it from the stack."
@@ -350,8 +410,7 @@ If no SIZE is given, modify by `resize-window-default-argument'"
   "Restore the previous state."
   (let ((config (resize-window--window-pop)))
     (when config
-      (set-window-configuration config)
-      (resize-window--add-backgrounds))))
+      (resize-window--restore-config config))))
 
 (defvar resize-window--capital-letters (number-sequence ?A ?Z)
   "List of uppercase letters as characters.")
