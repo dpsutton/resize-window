@@ -52,6 +52,7 @@
 ;;   3 : create a new vertical split
 ;;   0 : delete the current window
 ;;   k : kill all buffers and put window config on the stack
+;;   s : Save the state on the stack so you may restore it later.
 ;;   y : make the window configuration according to the last config
 ;;   pushed onto the stack
 ;;   ? : Display menu listing commands
@@ -146,6 +147,7 @@ should return the fine adjustment (default 1)."
     (?3 resize-window--split-window-right " Slit window vertically (save state)" nil)
     (?0 resize-window--delete-window " Delete window (save state)" nil)
     (?k resize-window--kill-other-windows " Kill other windows (save state)" nil)
+    (?s resize-window--window-push " Save state" nil)
     (?y resize-window--restore-windows " (when state) Restore window configuration" nil)
     (?? resize-window--display-menu          " Resize - toggle help menu" nil))
   "List of resize mode bindings.

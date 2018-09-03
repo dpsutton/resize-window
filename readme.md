@@ -46,6 +46,7 @@ panes. `W` cycles in the opposite direction.
 - `3`: create a new vertical split
 - `0`: delete the current window
 - `k`: kill all buffers and put window config on the stack
+- `s`: Save the state on the stack so you may restore it later.
 - `y`: make the window configuration according to the last config
   pushed onto the stack
 - `?`: Display menu listing commands
