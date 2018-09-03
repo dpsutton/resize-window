@@ -134,18 +134,14 @@ resize these buffers.
 
 ## Bugs ##
 
-- When in resize mode, there's a visual overlay over the current
-buffer to give some visual indication what's going on. However, if
-you have two copies of the same buffer open, both are
-overlayed. Would like to reduce this so that only the buffer you're
-working in is overlaid, regardless of how many copies are open
+Working to spot one to fix...!
 
 ## Hopeful upcoming features ##
 
 I can't promise any of these but these are the things I'm hoping to
 do:
 
-- put overlays over *other* buffers rather than current one. This
+- DONE: put overlays over *other* buffers rather than current one. This
 greys out other workspaces and leaves yours with full color,
 bringing your eye there. Just seems like a nice ergonomic touch.
 - DONE: allow customization to invert capital/non-capital behavior. Right

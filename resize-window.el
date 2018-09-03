@@ -92,8 +92,8 @@ This is also valuable to see that you are in resize mode."
   :type 'boolean
   :group 'resize-window)
 
-(defvar resize-window--background-overlay ()
-  "Holder for background overlay.")
+(defvar resize-window--background-overlays ()
+  "List of background overlays.")
 
 (defvar resize-window--window-stack ()
   "Stack for holding window configurations.")
@@ -128,8 +128,8 @@ should return the fine adjustment (default 1)."
     (?r resize-window--reset-windows         " Resize - reset window layout" nil)
     (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
     (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
-    (?2 split-window-below " Split window horizontally" nil)
-    (?3 split-window-right " Slit window vertically" nil)
+    (?2 resize-window--split-window-below " Split window horizontally" nil)
+    (?3 resize-window--split-window-right " Slit window vertically" nil)
     (?0 resize-window--delete-window " Delete window" nil)
     (?k resize-window--kill-other-windows " Kill other windows (save state)" nil)
     (?y resize-window--restore-windows " (when state) Restore window configuration" nil)
@@ -198,15 +198,25 @@ CHOICE is a \(key function documentation allows-capitals\)."
                                 resize-window-dispatch-alist)
              "\n"))
 
-(defun resize-window--make-background ()
-  "Place a background over the current window."
+(defun resize-window--add-backgrounds ()
+  "Place an overlay background over other windows."
+  (resize-window--remove-backgrounds)
   (when resize-window-allow-backgrounds
-    (let ((ol (make-overlay
-               (point-min)
-               (point-max)
-               (window-buffer))))
-      (overlay-put ol 'face 'resize-window-background)
-      ol)))
+    (let ((windows (remq (selected-window) (window-list nil -1))))
+      (dolist (window windows)
+        (with-current-buffer (window-buffer window)
+          (let ((ol (make-overlay
+                     (point-min)
+                     (point-max)
+                     (current-buffer))))
+            (overlay-put ol 'face 'resize-window-background)
+            (overlay-put ol 'window window)
+            (push ol resize-window--background-overlays)))))))
+
+(defun resize-window--remove-backgrounds ()
+  "Remove the overlay backgrounds."
+  (mapc 'delete-overlay resize-window--background-overlays)
+  (setq resize-window--background-overlays nil))
 
 (defun resize-window--execute-action (choice &optional scaled)
   "Given a CHOICE, grab values out of the alist.
@@ -232,27 +242,28 @@ If SCALED, then call action with the `resize-window-uppercase-argument'."
 Press n to resize down, p to resize up, b to resize left and f
 to resize right."
   (interactive)
-  (setq resize-window--background-overlay (resize-window--make-background))
+  (resize-window--add-backgrounds)
   (resize-window--notify "Resize mode: enter character, ? for help")
   (condition-case nil
-   (let ((reading-characters t)
-         ;; allow mini-buffer to collapse after displaying menu
-         (resize-mini-windows t))
-     (while reading-characters
-       (let* ((char (resize-window--match-alias (read-key)))
-              (choice (assoc char resize-window-dispatch-alist))
-              (capital (when (numberp char)
-                         (assoc (+ char 32) resize-window-dispatch-alist))))
-         (cond
-          (choice (resize-window--execute-action choice))
-          ((and capital (resize-window--allows-capitals capital))
-           ;; rather than pass an argument, we tell it to "scale" it
-           ;; with t and that method can worry about how to get that
-           ;; action
-           (resize-window--execute-action capital t))
-          (t (setq reading-characters nil)
-             (delete-overlay resize-window--background-overlay))))))
-   (quit (resize-window--delete-overlays))))
+      (let ((reading-characters t)
+            ;; allow mini-buffer to collapse after displaying menu
+            (resize-mini-windows t))
+        (while reading-characters
+          (let* ((char (resize-window--match-alias (read-key)))
+                 (choice (assoc char resize-window-dispatch-alist))
+                 (capital (when (numberp char)
+                            (assoc (+ char 32) resize-window-dispatch-alist))))
+            (cond
+             (choice (resize-window--execute-action choice))
+             ((and capital (resize-window--allows-capitals capital))
+              ;; rather than pass an argument, we tell it to "scale" it
+              ;; with t and that method can worry about how to get that
+              ;; action
+              (resize-window--execute-action capital t))
+             (t (setq reading-characters nil)
+                (resize-window--remove-backgrounds))))))
+    (quit
+     (resize-window--remove-backgrounds))))
 
 ;;; Function Handlers
 (defun resize-window--resize-downward (&optional size)
@@ -291,36 +302,35 @@ If no SIZE is given, modify by `resize-window-default-argument'"
   "Reset window layout to even spread."
   (balance-windows))
 
-(defun resize-window--delete-overlays ()
-  "Remove overlays."
-  (delete-overlay resize-window--background-overlay))
-
-(defun resize-window--create-overlay ()
-  "Add overlay."
-  (setq resize-window--background-overlay (resize-window--make-background)))
-
 (defun resize-window--cycle-window-positive ()
   "Cycle windows."
-  (delete-overlay resize-window--background-overlay)
   (other-window 1)
-  (setq resize-window--background-overlay (resize-window--make-background)))
+  (resize-window--add-backgrounds))
 
 (defun resize-window--cycle-window-negative ()
   "Cycle windows negative."
-  (delete-overlay resize-window--background-overlay)
   (other-window -1)
-  (setq resize-window--background-overlay (resize-window--make-background)))
+  (resize-window--add-backgrounds))
 
 (defun resize-window--display-menu ()
   "Display menu in minibuffer."
   (resize-window--notify "%s" (resize-window--get-documentation-strings)))
 
+(defun resize-window--split-window-below ()
+  "Split the window vertically."
+  (split-window-below)
+  (resize-window--add-backgrounds))
+
+(defun resize-window--split-window-right ()
+  "Split the window horizontally."
+  (split-window-right)
+  (resize-window--add-backgrounds))
+
 (defun resize-window--delete-window ()
   "Delete the current window."
   (unless (eq (selected-window) (window-main-window))
-    (delete-overlay resize-window--background-overlay)
     (delete-window)
-    (setq resize-window--background-overlay (resize-window--make-background))))
+    (resize-window--add-backgrounds)))
 
 (defun resize-window--window-push ()
   "Save the current state in the stack."
@@ -332,18 +342,16 @@ If no SIZE is given, modify by `resize-window-default-argument'"
 
 (defun resize-window--kill-other-windows ()
   "Delete other windows."
-  (resize-window--delete-overlays)
   (resize-window--window-push)
   (delete-other-windows)
-  (resize-window--create-overlay))
+  (resize-window--add-backgrounds))
 
 (defun resize-window--restore-windows ()
   "Restore the previous state."
   (let ((config (resize-window--window-pop)))
     (when config
-      (resize-window--delete-overlays)
       (set-window-configuration config)
-      (resize-window--create-overlay))))
+      (resize-window--add-backgrounds))))
 
 (defvar resize-window--capital-letters (number-sequence ?A ?Z)
   "List of uppercase letters as characters.")
