@@ -26,7 +26,7 @@
 
 ;;; Commentary:
 ;; Easily allows you to resize windows.  Rather than guessing that you
-;; want `C-u 17 C-x {`, you could just press FFff, which enlarges 5
+;; want `C-u 17 C-x {`, you could just press FFff, which resizes 5
 ;; lines, then 5 lines, then one and then one.  The idea is that the
 ;; normal motions n,p,f,b along with r for reset and w for cycling
 ;; windows allows for super simple resizing of windows.  All of this is
@@ -37,13 +37,14 @@
 ;; But, just run `M-x resize-window`. There are only a few commands to learn,
 ;; and they mimic the normal motions in emacs.
 
-;;   n : Makes the window vertically bigger, think scrolling down. Use
-;;        N  to enlarge 5 lines at once.
-;;   p : Makes the window vertically smaller, again, like scrolling. Use
-;;        P  to shrink 5 lines at once.
-;;   f : Makes the window horizontally bigger, like scrolling forward;
-;;        F  for five lines at once.
-;;   b : window horizontally smaller,  B  for five lines at once.
+;;   n : Resize the window vertically like scrolling down.
+;;        N  for 5 lines at once.
+;;   p : Resize the window vertically like scrolling up.
+;;        P  for 5 lines at once.
+;;   f : Resize the window horizontally like scrolling forward.
+;;        F  for 5 lines at once.
+;;   b : Resize the window horizontally like scrolling backward.
+;;        B  for 5 lines at once.
 ;;   r : reset window layout to standard
 ;;   w : cycle through windows so that you can adjust other window
 ;;       panes.  W  cycles in the opposite direction.
@@ -103,7 +104,7 @@ This is also valuable to see that you are in resize mode."
 
 (defun resize-window-lowercase-argument ()
   "Return the behavior for lowercase entries.
-Example, normally n maps to enlarge vertically by 1. However,
+Example, normally n maps to resize vertically by 1. However,
 if you have swapped capital and lowercase behavior, then
 this should return the coarse adjustment."
   (if resize-window-swap-capital-and-lowercase-behavior
@@ -112,7 +113,7 @@ this should return the coarse adjustment."
 
 (defun resize-window-uppercase-argument ()
   "Return the behavior for uppercase entries.
-Example, normally N maps to enlarge vertically by 5. However,
+Example, normally N maps to resize vertically by 5. However,
 if you have swapped capital and lowercase behavior, then this
 should return the fine adjustment (default 1)."
   (if resize-window-swap-capital-and-lowercase-behavior
@@ -120,10 +121,10 @@ should return the fine adjustment (default 1)."
     resize-window-coarse-argument))
 
 (defvar resize-window-dispatch-alist
-  '((?n resize-window--enlarge-down          " Resize - Expand down" t)
-    (?p resize-window--enlarge-up            " Resize - Expand up" t)
-    (?f resize-window--enlarge-horizontally  " Resize - horizontally" t)
-    (?b resize-window--shrink-horizontally   " Resize - shrink horizontally" t)
+  '((?n resize-window--resize-downward       " Resize - downward" t)
+    (?p resize-window--resize-upward         " Resize - upward" t)
+    (?f resize-window--resize-forward        " Resize - forward" t)
+    (?b resize-window--resize-backward       " Resize - backward" t)
     (?r resize-window--reset-windows         " Resize - reset window layout" nil)
     (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
     (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
@@ -228,8 +229,8 @@ If SCALED, then call action with the `resize-window-uppercase-argument'."
 ;;;###autoload
 (defun resize-window ()
   "Resize the window.
-Press n to enlarge down, p to enlarge up, b to enlarge left and f
-to enlarge right."
+Press n to resize down, p to resize up, b to resize left and f
+to resize right."
   (interactive)
   (setq resize-window--background-overlay (resize-window--make-background))
   (resize-window--notify "Resize mode: enter character, ? for help")
@@ -254,33 +255,37 @@ to enlarge right."
    (quit (resize-window--delete-overlays))))
 
 ;;; Function Handlers
-(defun resize-window--enlarge-down (&optional size)
-  "Extend the current window downwards by optional SIZE.
-If no SIZE is given, extend by `resize-window-lowercase-argument'."
+(defun resize-window--resize-downward (&optional size)
+  "Resize the window vertically downward by optional SIZE.
+If no SIZE is given, modify by `resize-window-default-argument'"
   (unless (frame-root-window-p (selected-window))
-    (let ((size (or size (resize-window-lowercase-argument))))
-      (enlarge-window size))))
+    (let ((size (or size (resize-window-lowercase-argument)))
+          (direction (if (window-in-direction 'below) 1 -1)))
+      (enlarge-window (* size direction)))))
 
-(defun resize-window--enlarge-up (&optional size)
-  "Bring bottom edge back up by one or optional SIZE.
-If no SIZE is given, extend by `resize-window-lowercase-argument'."
+(defun resize-window--resize-upward (&optional size)
+  "Resize the window vertically upward by optional SIZE.
+If no SIZE is given, modify by `resize-window-default-argument'"
   (unless (frame-root-window-p (selected-window))
-    (let ((size (or size (resize-window-lowercase-argument))))
-      (enlarge-window (- size)))))
+    (let ((size (or size (resize-window-lowercase-argument)))
+          (direction (if (window-in-direction 'below) -1 1)))
+      (enlarge-window (* size direction)))))
 
-(defun resize-window--enlarge-horizontally (&optional size)
-  "Enlarge the window horizontally by one or optional SIZE.
-If no SIZE is given, extend by `resize-window-lowercase-argument'."
+(defun resize-window--resize-forward (&optional size)
+  "Resize the window horizontally forward by optional SIZE.
+If no SIZE is given, modify by `resize-window-default-argument'"
   (unless (frame-root-window-p (selected-window))
-    (let ((size (or size (resize-window-lowercase-argument))))
-      (enlarge-window size t))))
+    (let ((size (or size (resize-window-lowercase-argument)))
+          (direction (if (window-in-direction 'right) 1 -1)))
+      (enlarge-window (* size direction) t))))
 
-(defun resize-window--shrink-horizontally (&optional size)
-  "Shrink the window horizontally by one or optional SIZE.
-If no SIZE is given, extend by `resize-window-lowercase-argument'."
+(defun resize-window--resize-backward (&optional size)
+  "Resize the window horizontally backward by optional SIZE.
+If no SIZE is given, modify by `resize-window-default-argument'"
   (unless (frame-root-window-p (selected-window))
-    (let ((size (or size (resize-window-lowercase-argument))))
-      (enlarge-window (- size) t))))
+    (let ((size (or size (resize-window-lowercase-argument)))
+          (direction (if (window-in-direction 'right) -1 1)))
+      (enlarge-window (* size direction) t))))
 
 (defun resize-window--reset-windows ()
   "Reset window layout to even spread."

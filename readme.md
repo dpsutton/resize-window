@@ -31,13 +31,14 @@ the caps lock key to control.
 But, just run `M-x resize-window`. There are only a few commands to learn,
 and they mimic the normal motions in emacs.
 
-- `n`: Makes the window vertically bigger, think scrolling down. Use
-`N` to enlarge 5 lines at once.
-- `p`: Makes the window vertically smaller, again, like scrolling. Use
-`P` to shrink 5 lines at once.
-- `f`: Makes the window horizontally bigger, like scrolling forward;
-`F` for five lines at once.
-- `b`: window horizontally smaller, `B` for five lines at once.
+- `n`: Resize the window vertically like scrolling down. Use `N` for 5
+lines at once.
+- `p`: Resize the window vertically like scrolling up. Use `P` for 5
+lines at once.
+- `f`: Resize the window horizontally like scrolling forward. Use `F`
+for 5 lines at once.
+- `b`: Resize the window horizontally like scrolling backward. Use `B`
+for 5 lines at once.
 - `r`: reset window layout to standard
 - `w`: cycle through windows so that you can adjust other window
 panes. `W` cycles in the opposite direction.
