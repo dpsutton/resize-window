@@ -1,4 +1,4 @@
-;;; resize-window.el --- easily resize windows          -*- lexical-binding: t; -*-
+;;; resize-window.el --- Easily resize windows          -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -28,13 +28,13 @@
 ;; Easily allows you to resize windows.  Rather than guessing that you
 ;; want `C-u 17 C-x {`, you could just press FFff, which resizes 5
 ;; lines, then 5 lines, then one and then one.  The idea is that the
-;; normal motions n,p,f,b along with r for reset and w for cycling
+;; normal motions n,p,f,b along with e for even and w for cycling
 ;; windows allows for super simple resizing of windows.  All of this is
 ;; inside of a while loop so that you don't have to invoke more chords
 ;; to resize again, but just keep using standard motions until you are
 ;; happy.
 
-;; But, just run `M-x resize-window`. There are only a few commands to learn,
+;; Just run `M-x resize-window`. There are only a few commands to learn,
 ;; and they mimic the normal motions in emacs.
 
 ;;   n : Resize the window vertically like scrolling down.
@@ -45,17 +45,16 @@
 ;;        F  for 5 lines at once.
 ;;   b : Resize the window horizontally like scrolling backward.
 ;;        B  for 5 lines at once.
-;;   r : reset window layout to standard
-;;   w : cycle through windows so that you can adjust other window
-;;       panes.  W  cycles in the opposite direction.
-;;   2 : create a new horizontal split
-;;   3 : create a new vertical split
-;;   0 : delete the current window
-;;   k : kill all buffers and put window config on the stack
+;;   w : Cycle through windows so that you can adjust other window panes.
+;;        W  cycle in the opposite direction.
+;;   e : Even the size of the windows.
+;;   2 : Split the window horizontally.
+;;   3 : Split the window vertically.
+;;   0 : Delete the current window.
+;;   k : Delete other windows and save the state on the stack.
 ;;   s : Save the state on the stack so you may restore it later.
-;;   y : make the window configuration according to the last config
-;;   pushed onto the stack
-;;   ? : Display menu listing commands
+;;   y : Restore to a previous saved state.
+;;   ? : Display the help menu listing commands.
 
 
 ;;; Code:
@@ -136,20 +135,20 @@ should return the fine adjustment (default 1)."
     resize-window-coarse-argument))
 
 (defvar resize-window-dispatch-alist
-  '((?n resize-window--resize-downward       " Resize - downward" t)
-    (?p resize-window--resize-upward         " Resize - upward" t)
-    (?f resize-window--resize-forward        " Resize - forward" t)
-    (?b resize-window--resize-backward       " Resize - backward" t)
-    (?r resize-window--reset-windows         " Resize - reset window layout (save state)" nil)
-    (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
-    (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
-    (?2 resize-window--split-window-below " Split window horizontally (save state)" nil)
-    (?3 resize-window--split-window-right " Slit window vertically (save state)" nil)
-    (?0 resize-window--delete-window " Delete window (save state)" nil)
-    (?k resize-window--kill-other-windows " Kill other windows (save state)" nil)
-    (?s resize-window--window-push " Save state" nil)
-    (?y resize-window--restore-windows " (when state) Restore window configuration" nil)
-    (?? resize-window--display-menu          " Resize - toggle help menu" nil))
+  '((?n resize-window--resize-downward       "Resize downward" t)
+    (?p resize-window--resize-upward         "Resize upward" t)
+    (?f resize-window--resize-forward        "Resize forward" t)
+    (?b resize-window--resize-backward       "Resize backward" t)
+    (?w resize-window--cycle-window-positive "Next window" nil)
+    (?W resize-window--cycle-window-negative "Previous window" nil)
+    (?e resize-window--reset-windows         "Even layout (save state)" nil)
+    (?2 resize-window--split-window-below    "Split below (save state)" nil)
+    (?3 resize-window--split-window-right    "Split right (save state)" nil)
+    (?0 resize-window--delete-window         "Delete window (save state)" nil)
+    (?k resize-window--kill-other-windows    "Delete other windows (save state)" nil)
+    (?s resize-window--window-push           "Save state" nil)
+    (?y resize-window--restore-windows       "Restore state (save state)" nil)
+    (?? resize-window--display-menu          "Toggle help menu" nil))
   "List of resize mode bindings.
 Main data structure of the dispatcher with the form:
 \(key function documentation allows-capitals\)")

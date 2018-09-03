@@ -39,17 +39,16 @@ lines at once.
 for 5 lines at once.
 - `b`: Resize the window horizontally like scrolling backward. Use `B`
 for 5 lines at once.
-- `r`: reset window layout to standard
-- `w`: cycle through windows so that you can adjust other window
-panes. `W` cycles in the opposite direction.
-- `2`: create a new horizontal split
-- `3`: create a new vertical split
-- `0`: delete the current window
-- `k`: kill all buffers and put window config on the stack
+- `w`: Cycle through windows so that you can adjust other window
+panes. Use `W` to cycle in the opposite direction.
+- `e`: Even the size of the windows.
+- `2`: Split the window horizontally.
+- `3`: Split the window vertically.
+- `0`: Delete the current window.
+- `k`: Delete other windows and save the state on the stack.
 - `s`: Save the state on the stack so you may restore it later.
-- `y`: make the window configuration according to the last config
-  pushed onto the stack
-- `?`: Display menu listing commands
+- `y`: Restore to a previous saved state.
+- `?`: Display the help menu listing commands.
 
 The best part of this is that resize-window keeps listening for more
 keystrokes until it doesn't recognize input. So you don't have to make

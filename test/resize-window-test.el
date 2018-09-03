@@ -58,5 +58,5 @@
                    (resize-window-lowercase-argument)))))
 
 (ert-deftest resize-window--key-already-used-tests ()
-  (should (resize-window--key-available? ?e))
+  (should (resize-window--key-available? ?v))
   (should-not (resize-window--key-available? ?n)))
