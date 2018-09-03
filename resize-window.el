@@ -67,24 +67,29 @@
 
 (defcustom resize-window-coarse-argument 5
   "Set how big a capital letter movement is."
-  :type 'integer)
+  :type 'integer
+  :group 'resize-window)
 
 (defcustom resize-window-fine-argument 1
   "Set how big the default movement should be."
-  :type 'integer)
+  :type 'integer
+  :group 'resize-window)
 
 (defcustom resize-window-allow-backgrounds t
   "Allow resize mode to set backgrounds.
 This is also valuable to see that you are in resize mode."
-  :type 'boolean)
+  :type 'boolean
+  :group 'resize-window)
 
 (defcustom resize-window-swap-capital-and-lowercase-behavior nil
   "Reverse default behavior of lower case and uppercase arguments."
-  :type 'boolean)
+  :type 'boolean
+  :group 'resize-window)
 
 (defcustom resize-window-notify-with-messages t
   "Show notifications in message bar."
-  :type 'boolean)
+  :type 'boolean
+  :group 'resize-window)
 
 (defvar resize-window--background-overlay ()
   "Holder for background overlay.")
