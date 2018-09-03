@@ -257,26 +257,30 @@ to enlarge right."
 (defun resize-window--enlarge-down (&optional size)
   "Extend the current window downwards by optional SIZE.
 If no SIZE is given, extend by `resize-window-lowercase-argument'."
-  (let ((size (or size (resize-window-lowercase-argument))))
-    (enlarge-window size)))
+  (unless (frame-root-window-p (selected-window))
+    (let ((size (or size (resize-window-lowercase-argument))))
+      (enlarge-window size))))
 
 (defun resize-window--enlarge-up (&optional size)
   "Bring bottom edge back up by one or optional SIZE.
 If no SIZE is given, extend by `resize-window-lowercase-argument'."
-  (let ((size (or size (resize-window-lowercase-argument))))
-    (enlarge-window (- size))))
+  (unless (frame-root-window-p (selected-window))
+    (let ((size (or size (resize-window-lowercase-argument))))
+      (enlarge-window (- size)))))
 
 (defun resize-window--enlarge-horizontally (&optional size)
   "Enlarge the window horizontally by one or optional SIZE.
 If no SIZE is given, extend by `resize-window-lowercase-argument'."
-  (let ((size (or size (resize-window-lowercase-argument))))
-    (enlarge-window size t)))
+  (unless (frame-root-window-p (selected-window))
+    (let ((size (or size (resize-window-lowercase-argument))))
+      (enlarge-window size t))))
 
 (defun resize-window--shrink-horizontally (&optional size)
   "Shrink the window horizontally by one or optional SIZE.
 If no SIZE is given, extend by `resize-window-lowercase-argument'."
-  (let ((size (or size (resize-window-lowercase-argument))))
-    (enlarge-window (- size) t)))
+  (unless (frame-root-window-p (selected-window))
+    (let ((size (or size (resize-window-lowercase-argument))))
+      (enlarge-window (- size) t))))
 
 (defun resize-window--reset-windows ()
   "Reset window layout to even spread."
