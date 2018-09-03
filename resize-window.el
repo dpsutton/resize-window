@@ -161,11 +161,31 @@ Main data structure of the dispatcher with the form:
   "List of aliases for commands.
 Rather than have to use n, etc, you can alias keys for others.")
 
+(defvar resize-window--notify-timers nil
+  "Notify callback timers.")
+
+(defun resize-window--cancel-notify ()
+  "Cancel all the notify callback timers."
+  (mapc 'cancel-timer resize-window--notify-timers)
+  (setq resize-window--notify-timers nil))
+
 (defun resize-window--notify (&rest info)
   "Notify with INFO, a string or list (format-string object...).
-This is just a pass through to message usually.  However, it can be
-overridden in tests to test the output of message."
-  (when resize-window-notify-with-messages (apply #'message info)))
+Display the status message again after a timeout.
+Can be overridden in tests to test the output."
+  (resize-window--cancel-notify)
+  (when resize-window-notify-with-messages
+    (message "Resize mode: %s" (apply #'format info))
+    (push (run-with-timer 1.5 nil #'resize-window--notify-status)
+          resize-window--notify-timers)))
+
+(defun resize-window--notify-status ()
+  "Display status message."
+  (when resize-window-notify-with-messages
+    (if (minibuffer-window-active-p (selected-window))
+        (push (run-with-timer 1.5 nil #'resize-window--notify-status)
+              resize-window--notify-timers)
+      (message "Resize mode: insert KEY, ? for help, q or SPACE to quit"))))
 
 (defun resize-window--key-str (key)
   "Return the string representation of KEY.
@@ -304,9 +324,7 @@ CHOICE is a \(key function documentation allows-capitals\).
 If SCALED, then call action with the `resize-window-uppercase-argument'."
   (let ((action (resize-window--choice-lambda choice))
         (description (resize-window--choice-documentation choice)))
-    (unless (resize-window--keys-equal
-             (resize-window--choice-keybinding choice) [??])
-      (resize-window--notify "%s" description))
+    (resize-window--notify "%s" description)
     (condition-case nil
         (if scaled
             (funcall action (resize-window-uppercase-argument))
@@ -327,7 +345,7 @@ to resize right."
   ;; NOTE: Do not trim the stack here. Let stack requests to handle
   ;; window configurations in excess.
   (resize-window--add-backgrounds)
-  (resize-window--notify "Resize mode: insert KEY, ? for help")
+  (resize-window--notify-status)
   (condition-case nil
       (let ((reading-keys t)
             ;; allow mini-buffer to collapse after displaying menu
@@ -352,6 +370,7 @@ to resize right."
                   (resize-window--keys-equal key "C-g"))
               (setq reading-keys nil)
               (message nil)
+              (resize-window--cancel-notify)
               (resize-window--display-menu 'kill)
               (resize-window--remove-backgrounds))
              (t
@@ -361,6 +380,7 @@ to resize right."
                 key (resize-window--key-str key))))))))
     (quit
      (message nil)
+     (resize-window--cancel-notify)
      (resize-window--display-menu 'kill)
      (resize-window--remove-backgrounds))))
 
