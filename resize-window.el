@@ -259,10 +259,19 @@ to resize right."
               ;; with t and that method can worry about how to get that
               ;; action
               (resize-window--execute-action capital t))
-             (t
+             (;; NOTE: Don't use `=', if `char' is a symbol like
+              ;; 'insertchar it will fail.  Use `equal' instead.
+              (or (equal char ?q)
+                  (equal char ?Q)
+                  (equal char (string-to-char " ")))
               (setq reading-characters nil)
               (resize-window--display-menu 'kill)
-              (resize-window--remove-backgrounds))))))
+              (resize-window--remove-backgrounds))
+             (t
+              (resize-window--notify
+               (format
+                "Unregistered key: (%s) %s"
+                char (single-key-description char))))))))
     (quit
      (resize-window--display-menu 'kill)
      (resize-window--remove-backgrounds))))
