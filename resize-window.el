@@ -185,11 +185,10 @@ nil."
   "Formats screen message about CHOICE.
 CHOICE is a \(key function documentation allows-capitals\)."
   (let ((key (resize-window--choice-keybinding choice)))
-    (format "%s: %s " (if (resize-window--allows-capitals choice)
-                          (format "%s|%s"
-                                  (string key)
-                                  (string (- key 32)))
-                        (string key))
+    (concat (if (resize-window--allows-capitals choice)
+                (format "%s|%s" (string key) (string (- key 32)))
+              (format " %s " (string key)))
+            " : "
             (resize-window--choice-documentation choice))))
 
 (defun resize-window--get-documentation-strings ()

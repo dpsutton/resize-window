@@ -21,9 +21,9 @@
 (defvar choice-capital '(?n 'function "documentation" t))
 
 (ert-deftest should-create-documentation-from-alist ()
-  (should (equal "n: documentation "
+  (should (equal " n  : documentation"
                  (resize-window--display-choice choice-no-capital)))
-  (should (equal "n|N: documentation "
+  (should (equal "n|N : documentation"
                  (resize-window--display-choice choice-capital))))
 
 (ert-deftest should-execute-and-display-message ()
