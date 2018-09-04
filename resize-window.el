@@ -61,7 +61,7 @@
 (require 'cl-lib)
 
 (defgroup resize-window nil
-  "Quickly resize current window"
+  "Quickly resize windows."
   :group 'convenience
   :prefix "rw-")
 
@@ -74,7 +74,7 @@
   :type 'integer)
 
 (defcustom resize-window-allow-backgrounds t
-  "Allow resize mode to set a background.
+  "Allow resize mode to set backgrounds.
 This is also valuable to see that you are in resize mode."
   :type 'boolean)
 
@@ -128,9 +128,9 @@ should return the fine adjustment (default 1)."
     (?k resize-window--kill-other-windows " Kill other windows (save state)" nil)
     (?y resize-window--restore-windows " (when state) Restore window configuration" nil)
     (?? resize-window--display-menu          " Resize - display menu" nil))
-  "List of actions for `resize-window-dispatch-default.
+  "List of resize mode bindings.
 Main data structure of the dispatcher with the form:
-\(char function documentation match-capitals\)")
+\(key function documentation allows-capitals\)")
 
 (defvar resize-window-alias-list
   '((right ?f)
@@ -141,16 +141,16 @@ Main data structure of the dispatcher with the form:
 Rather than have to use n, etc, you can alias keys for others.")
 
 (defun resize-window--notify (&rest info)
-  "Notify with INFO, a string.
+  "Notify with INFO, a string or list (format-string object...).
 This is just a pass through to message usually.  However, it can be
 overridden in tests to test the output of message."
   (when resize-window-notify-with-messages (apply #'message info)))
 
 (defun resize-window--match-alias (key)
-  "Taken the KEY or keyboard selection from `read-key` check for alias.
+  "Taken the KEY or keyboard selection from `read-key' check for alias.
 Match the KEY against the alias table.  If found, return the value that it
-points to, which should be a key in the ‘resize-window-dispatch-alist’.
-Otherwise, return the key."
+points to, which should be a key in the `resize-window-dispatch-alist'.
+Otherwise, return the KEY."
   (let ((alias (assoc key resize-window-alias-list)))
     (if alias
         (car (cdr alias))
@@ -177,7 +177,7 @@ nil."
 
 (defun resize-window--display-choice (choice)
   "Formats screen message about CHOICE.
-CHOICE is a \(key function description allows-capital\)."
+CHOICE is a \(key function documentation allows-capitals\)."
   (let ((key (resize-window--choice-keybinding choice)))
     (format "%s: %s " (if (resize-window--allows-capitals choice)
                           (format "%s|%s"
@@ -187,6 +187,7 @@ CHOICE is a \(key function description allows-capital\)."
             (resize-window--choice-documentation choice))))
 
 (defun resize-window--get-documentation-strings ()
+  "Return documented keybindings as a multiline string."
   (mapconcat #'identity (mapcar 'resize-window--display-choice
                               resize-window-dispatch-alist)
              "\n"))
@@ -203,8 +204,8 @@ CHOICE is a \(key function description allows-capital\)."
 
 (defun resize-window--execute-action (choice &optional scaled)
   "Given a CHOICE, grab values out of the alist.
-If SCALED, then call action with the resize-window-capital-argument."
-  ;; (char function description)
+CHOICE is a \(key function documentation allows-capitals\).
+If SCALED, then call action with the `resize-window-uppercase-argument'."
   (let ((action (resize-window--choice-lambda choice))
         (description (resize-window--choice-documentation choice)))
     (unless (equal (resize-window--choice-keybinding choice) ??)
@@ -250,22 +251,25 @@ to enlarge right."
 ;;; Function Handlers
 (defun resize-window--enlarge-down (&optional size)
   "Extend the current window downwards by optional SIZE.
-If no SIZE is given, extend by `resize-window-default-argument`"
+If no SIZE is given, extend by `resize-window-lowercase-argument'."
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window size)))
 
 (defun resize-window--enlarge-up (&optional size)
-  "Bring bottom edge back up by one or optional SIZE."
+  "Bring bottom edge back up by one or optional SIZE.
+If no SIZE is given, extend by `resize-window-lowercase-argument'."
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window (- size))))
 
 (defun resize-window--enlarge-horizontally (&optional size)
-  "Enlarge the window horizontally by one or optional SIZE."
+  "Enlarge the window horizontally by one or optional SIZE.
+If no SIZE is given, extend by `resize-window-lowercase-argument'."
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window size t)))
 
 (defun resize-window--shrink-horizontally (&optional size)
-  "Shrink the window horizontally by one or optional SIZE."
+  "Shrink the window horizontally by one or optional SIZE.
+If no SIZE is given, extend by `resize-window-lowercase-argument'."
   (let ((size (or size (resize-window-lowercase-argument))))
     (enlarge-window (- size) t)))
 
@@ -274,9 +278,11 @@ If no SIZE is given, extend by `resize-window-default-argument`"
   (balance-windows))
 
 (defun resize-window--delete-overlays ()
+  "Remove overlays."
   (delete-overlay resize-window--background-overlay))
 
 (defun resize-window--create-overlay ()
+  "Add overlay."
   (setq resize-window--background-overlay (resize-window--make-background)))
 
 (defun resize-window--cycle-window-positive ()
@@ -296,38 +302,48 @@ If no SIZE is given, extend by `resize-window-default-argument`"
   (resize-window--notify "%s" (resize-window--get-documentation-strings)))
 
 (defun resize-window--delete-window ()
+  "Delete the current window."
   (delete-overlay resize-window--background-overlay)
   (delete-window)
   (setq resize-window--background-overlay (resize-window--make-background)))
 
 (defun resize-window--window-push ()
+  "Save the current state in the stack."
   (push (current-window-configuration) resize-window--window-stack))
 
 (defun resize-window--window-pop ()
+  "Return the first element and remove it from the stack."
   (pop resize-window--window-stack))
 
 (defun resize-window--kill-other-windows ()
+  "Delete other windows."
   (resize-window--delete-overlays)
   (resize-window--window-push)
   (delete-other-windows)
   (resize-window--create-overlay))
 
 (defun resize-window--restore-windows ()
+  "Restore the previous state."
   (let ((config (resize-window--window-pop)))
     (when config
       (resize-window--delete-overlays)
       (set-window-configuration config)
       (resize-window--create-overlay))))
 
-(defvar resize-window--capital-letters (number-sequence ?A ?Z))
-(defvar resize-window--lower-letters (number-sequence ?a ?z))
+(defvar resize-window--capital-letters (number-sequence ?A ?Z)
+  "List of uppercase letters as characters.")
+(defvar resize-window--lower-letters (number-sequence ?a ?z)
+  "List of lowercase letters as characters.")
 
 (defun resize-window--key-available? (key)
+  "Return non-nil if KEY is bound, otherwise return nil."
   (let ((keys (mapcar #'resize-window--choice-keybinding resize-window-dispatch-alist)))
     (not (member key keys))))
 
 (defun resize-window-add-choice (key func doc &optional allows-capitals)
-  "Register a function for resize-window.
+  "Register a new binding for `resize-window'.
+Refuses to replace an already taken key.
+
 KEY is the char (eg ?c) that should invoke the FUNC. DOC is a doc
 string for the help menu, and optional ALLOWS-CAPITALS should be
 t or nil. Functions should be of zero arity if they do not allow
