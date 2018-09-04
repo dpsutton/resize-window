@@ -139,7 +139,7 @@ should return the fine adjustment (default 1)."
     (?p resize-window--resize-upward         " Resize - upward" t)
     (?f resize-window--resize-forward        " Resize - forward" t)
     (?b resize-window--resize-backward       " Resize - backward" t)
-    (?r resize-window--reset-windows         " Resize - reset window layout" nil)
+    (?r resize-window--reset-windows         " Resize - reset window layout (save state)" nil)
     (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
     (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
     (?2 resize-window--split-window-below " Split window horizontally" nil)
@@ -331,6 +331,7 @@ If no SIZE is given, modify by `resize-window-default-argument'"
 
 (defun resize-window--reset-windows ()
   "Reset window layout to even spread."
+  (resize-window--window-push)
   (balance-windows))
 
 (defun resize-window--cycle-window-positive ()
