@@ -142,8 +142,8 @@ should return the fine adjustment (default 1)."
     (?r resize-window--reset-windows         " Resize - reset window layout (save state)" nil)
     (?w resize-window--cycle-window-positive " Resize - cycle window" nil)
     (?W resize-window--cycle-window-negative " Resize - cycle window" nil)
-    (?2 resize-window--split-window-below " Split window horizontally" nil)
-    (?3 resize-window--split-window-right " Slit window vertically" nil)
+    (?2 resize-window--split-window-below " Split window horizontally (save state)" nil)
+    (?3 resize-window--split-window-right " Slit window vertically (save state)" nil)
     (?0 resize-window--delete-window " Delete window (save state)" nil)
     (?k resize-window--kill-other-windows " Kill other windows (save state)" nil)
     (?y resize-window--restore-windows " (when state) Restore window configuration" nil)
@@ -374,11 +374,13 @@ ACTION is a symbol of value 'kill or 'open."
 
 (defun resize-window--split-window-below ()
   "Split the window vertically."
+  (resize-window--window-push)
   (split-window-below)
   (resize-window--add-backgrounds))
 
 (defun resize-window--split-window-right ()
   "Split the window horizontally."
+  (resize-window--window-push)
   (split-window-right)
   (resize-window--add-backgrounds))
 
