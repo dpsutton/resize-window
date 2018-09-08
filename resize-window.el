@@ -308,9 +308,10 @@ If no SIZE is given, extend by `resize-window-lowercase-argument'."
 
 (defun resize-window--delete-window ()
   "Delete the current window."
-  (delete-overlay resize-window--background-overlay)
-  (delete-window)
-  (setq resize-window--background-overlay (resize-window--make-background)))
+  (unless (eq (selected-window) (window-main-window))
+    (delete-overlay resize-window--background-overlay)
+    (delete-window)
+    (setq resize-window--background-overlay (resize-window--make-background))))
 
 (defun resize-window--window-push ()
   "Save the current state in the stack."
