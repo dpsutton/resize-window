@@ -189,7 +189,7 @@ CHOICE is a \(key function documentation allows-capitals\)."
 (defun resize-window--get-documentation-strings ()
   "Return documented keybindings as a multiline string."
   (mapconcat #'identity (mapcar 'resize-window--display-choice
-                              resize-window-dispatch-alist)
+                                resize-window-dispatch-alist)
              "\n"))
 
 (defun resize-window--make-background ()
@@ -211,14 +211,14 @@ If SCALED, then call action with the `resize-window-uppercase-argument'."
     (unless (equal (resize-window--choice-keybinding choice) ??)
       (resize-window--notify "%s" description))
     (condition-case nil
-     (if scaled
-         (funcall action (resize-window-uppercase-argument))
-       (funcall action))
-
-     (wrong-number-of-arguments
-      (resize-window--notify "Invalid arity in function for %s"
-                             (char-to-string
-                              (resize-window--choice-keybinding choice)))))))
+        (if scaled
+            (funcall action (resize-window-uppercase-argument))
+          (funcall action))
+      (wrong-number-of-arguments
+       (resize-window--notify
+        "Invalid arity in function for %s"
+        (char-to-string
+         (resize-window--choice-keybinding choice)))))))
 
 ;;;###autoload
 (defun resize-window ()
@@ -337,7 +337,8 @@ If no SIZE is given, extend by `resize-window-lowercase-argument'."
 
 (defun resize-window--key-available? (key)
   "Return non-nil if KEY is bound, otherwise return nil."
-  (let ((keys (mapcar #'resize-window--choice-keybinding resize-window-dispatch-alist)))
+  (let ((keys (mapcar #'resize-window--choice-keybinding
+                      resize-window-dispatch-alist)))
     (not (member key keys))))
 
 (defun resize-window-add-choice (key func doc &optional allows-capitals)
@@ -351,8 +352,10 @@ capitals, and should be of optional single arity if they allow
 capitals. Invoking with the capital will pass the capital
 argument."
   (if (resize-window--key-available? key)
-      (push (list key func doc allows-capitals) resize-window-dispatch-alist)
-      (message "The `%s` key is already taken for resize-window." (char-to-string key))))
+      (push (list key func doc allows-capitals)
+            resize-window-dispatch-alist)
+    (message "The `%s` key is already taken for resize-window."
+             (char-to-string key))))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
