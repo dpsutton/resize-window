@@ -167,15 +167,77 @@ This is just a pass through to message usually.  However, it can be
 overridden in tests to test the output of message."
   (when resize-window-notify-with-messages (apply #'message info)))
 
+(defun resize-window--key-str (key)
+  "Return the string representation of KEY.
+KEY is a symbol, character (integer), key text, or key sequence.
+
+For instance, ?n \"n\" [?n] [(?n)] are considered the same, and
+?\\C-n \"C-n\" \"\\C-n\" [?\\C-n] [(?\\C-n)] [(control ?n)] too."
+  ;; NOTE: Fail loudly when KEY is wrong to help debugging.
+  (key-description
+   (cond
+    ((and (not (booleanp key))
+          (or (symbolp key) (integerp key)))
+     (vector key))
+    ((stringp key)
+     (kbd key))
+    ((vectorp key)
+     key)
+    (t
+     (signal 'wrong-type-argument
+             `((symbolp integerp stringp vectorp) ,key))))))
+
+(defun resize-window--keys-equal (&rest keys)
+  "Return non-nil if KEYS are considered equal.
+If there is only one key return non-nil."
+  (let ((key-str (resize-window--key-str (car keys))))
+    (not (cl-find-if-not
+          (lambda (k)
+            (string= key-str (resize-window--key-str k)))
+          (cdr keys)))))
+
+(defun resize-window--key-to-lower (key)
+  "Return the lowercase key sequence of KEY.
+Return nil if KEY isn't an uppercase letter."
+  (let* ((key-str (resize-window--key-str key))
+         (char (if (= (length key-str) 1) (string-to-char key-str))))
+    (and char
+         (member char resize-window--capital-letters)
+         (vector (+ char 32)))))
+
+(defun resize-window--key-to-upper (key)
+  "Return the uppercase key sequence of KEY.
+Return nil if KEY isn't an lowercase letter."
+  (let* ((key-str (resize-window--key-str key))
+         (char (if (= (length key-str) 1) (string-to-char key-str))))
+    (and char
+         (member char resize-window--lower-letters)
+         (vector (- char 32)))))
+
+(defun resize-window--key-element (key sequence)
+  "Return the first element in SEQUENCE whose car equals KEY."
+  (let ((key-str (resize-window--key-str key)))
+    (cl-assoc-if
+     (lambda (k)
+       (string= key-str (resize-window--key-str k)))
+     sequence)))
+
 (defun resize-window--match-alias (key)
-  "Taken the KEY or keyboard selection from `read-key' check for alias.
+  "Taken the KEY or keyboard selection check for alias.
 Match the KEY against the alias table.  If found, return the value that it
 points to, which should be a key in the `resize-window-dispatch-alist'.
 Otherwise, return the KEY."
-  (let ((alias (assoc key resize-window-alias-list)))
+  (let ((alias (resize-window--key-element
+                key resize-window-alias-list)))
     (if alias
         (car (cdr alias))
       key)))
+
+(defun resize-window--match-dispatch (key)
+  "Taken the KEY or keyboard selection check for an action.
+Match the KEY against the alias table `resize-window-dispatch-alist'."
+  (resize-window--key-element
+   key resize-window-dispatch-alist))
 
 (defun resize-window--choice-keybinding (choice)
   "Get the keybinding associated with CHOICE."
@@ -201,8 +263,12 @@ nil."
 CHOICE is a \(key function documentation allows-capitals\)."
   (let ((key (resize-window--choice-keybinding choice)))
     (concat (if (resize-window--allows-capitals choice)
-                (format "%s|%s" (string key) (string (- key 32)))
-              (format " %s " (string key)))
+                (format "%s|%s"
+                        (resize-window--key-str key)
+                        (resize-window--key-str
+                         (resize-window--key-to-upper key)))
+              (format " %s "
+                      (resize-window--key-str key)))
             " : "
             (resize-window--choice-documentation choice))))
 
@@ -238,7 +304,8 @@ CHOICE is a \(key function documentation allows-capitals\).
 If SCALED, then call action with the `resize-window-uppercase-argument'."
   (let ((action (resize-window--choice-lambda choice))
         (description (resize-window--choice-documentation choice)))
-    (unless (equal (resize-window--choice-keybinding choice) ??)
+    (unless (resize-window--keys-equal
+             (resize-window--choice-keybinding choice) [??])
       (resize-window--notify "%s" description))
     (condition-case nil
         (if scaled
@@ -247,7 +314,7 @@ If SCALED, then call action with the `resize-window-uppercase-argument'."
       (wrong-number-of-arguments
        (resize-window--notify
         "Invalid arity in function for %s"
-        (char-to-string
+        (resize-window--key-str
          (resize-window--choice-keybinding choice)))))))
 
 ;;;###autoload
@@ -260,16 +327,17 @@ to resize right."
   ;; NOTE: Do not trim the stack here. Let stack requests to handle
   ;; window configurations in excess.
   (resize-window--add-backgrounds)
-  (resize-window--notify "Resize mode: enter character, ? for help")
+  (resize-window--notify "Resize mode: insert KEY, ? for help")
   (condition-case nil
-      (let ((reading-characters t)
+      (let ((reading-keys t)
             ;; allow mini-buffer to collapse after displaying menu
             (resize-mini-windows t))
-        (while reading-characters
-          (let* ((char (resize-window--match-alias (read-key)))
-                 (choice (assoc char resize-window-dispatch-alist))
-                 (capital (when (numberp char)
-                            (assoc (+ char 32) resize-window-dispatch-alist))))
+        (while reading-keys
+          (let* ((kin (read-key-sequence-vector nil nil t))
+                 (key (and kin (resize-window--match-alias kin)))
+                 (choice (and key (resize-window--match-dispatch key)))
+                 (lower (and key (resize-window--key-to-lower key)))
+                 (capital (and lower (resize-window--match-dispatch lower))))
             (cond
              (choice (resize-window--execute-action choice))
              ((and capital (resize-window--allows-capitals capital))
@@ -277,21 +345,20 @@ to resize right."
               ;; with t and that method can worry about how to get that
               ;; action
               (resize-window--execute-action capital t))
-             (;; NOTE: Don't use `=', if `char' is a symbol like
-              ;; 'insertchar it will fail.  Use `equal' instead.
-              (or resize-window-unregistered-key-quit
-                  (equal char ?q)
-                  (equal char ?Q)
-                  (equal char (string-to-char " ")))
-              (setq reading-characters nil)
+             ((or resize-window-unregistered-key-quit
+                  (resize-window--keys-equal key [?q])
+                  (resize-window--keys-equal key [?Q])
+                  (resize-window--keys-equal key [? ])
+                  (resize-window--keys-equal key "C-g"))
+              (setq reading-keys nil)
               (message nil)
               (resize-window--display-menu 'kill)
               (resize-window--remove-backgrounds))
              (t
               (resize-window--notify
                (format
-                "Unregistered key: (%s) %s"
-                char (single-key-description char))))))))
+                "Unregistered key: %s -> %s"
+                key (resize-window--key-str key))))))))
     (quit
      (message nil)
      (resize-window--display-menu 'kill)
@@ -560,24 +627,27 @@ See also `resize-window-stack-size'."
 
 (defun resize-window--key-available? (key)
   "Return non-nil if KEY is bound, otherwise return nil."
-  (and (not (assoc key resize-window-alias-list))
-       (not (assoc key resize-window-dispatch-alist))))
+  (and (not (resize-window--key-element
+             key resize-window-alias-list))
+       (not (resize-window--key-element
+             key resize-window-dispatch-alist))))
 
 (defun resize-window-add-choice (key func doc &optional allows-capitals)
   "Register a new binding for `resize-window'.
 Refuses to replace an already taken key.
 
-KEY is the char (eg ?c) that should invoke the FUNC. DOC is a doc
-string for the help menu, and optional ALLOWS-CAPITALS should be
-t or nil. Functions should be of zero arity if they do not allow
-capitals, and should be of optional single arity if they allow
-capitals. Invoking with the capital will pass the capital
-argument."
+KEY is the key (e.g. ?c) that invokes the function FUNC. DOC is a
+docstring for the help menu. A non-nil ALLOWS-CAPITALS tells FUNC
+accepts capital letters. FUNC should be of zero arity if does not
+allow capitals, otherwise to allow capitals should be of optional
+single arity so a capital KEY may be passed to FUNC when pressed.
+
+See also `resize-window--key-str'."
   (if (resize-window--key-available? key)
       (push (list key func doc allows-capitals)
             resize-window-dispatch-alist)
     (message "The `%s` key is already taken for resize-window."
-             (char-to-string key))))
+             (resize-window--key-str key))))
 
 (provide 'resize-window)
 ;;; resize-window.el ends here
