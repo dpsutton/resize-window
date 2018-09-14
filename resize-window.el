@@ -342,9 +342,8 @@ If no SIZE is given, extend by `resize-window-lowercase-argument'."
 
 (defun resize-window--key-available? (key)
   "Return non-nil if KEY is bound, otherwise return nil."
-  (let ((keys (mapcar #'resize-window--choice-keybinding
-                      resize-window-dispatch-alist)))
-    (not (member key keys))))
+  (and (not (assoc key resize-window-alias-list))
+       (not (assoc key resize-window-dispatch-alist))))
 
 (defun resize-window-add-choice (key func doc &optional allows-capitals)
   "Register a new binding for `resize-window'.
