@@ -227,23 +227,25 @@ to enlarge right."
   (interactive)
   (setq resize-window--background-overlay (resize-window--make-background))
   (resize-window--notify "Resize mode: enter character, ? for help")
-  (let ((reading-characters t)
-        ;; allow mini-buffer to collapse after displaying menu
-        (resize-mini-windows t))
-    (while reading-characters
-      (let* ((char (resize-window--match-alias (read-key)))
-             (choice (assoc char resize-window-dispatch-alist))
-             (capital (when (numberp char)
-                        (assoc (+ char 32) resize-window-dispatch-alist))))
-        (cond
-         (choice (resize-window--execute-action choice))
-         ((and capital (resize-window--allows-capitals capital))
-          ;; rather than pass an argument, we tell it to "scale" it
-          ;; with t and that method can worry about how to get that
-          ;; action
-          (resize-window--execute-action capital t))
-         (t (setq reading-characters nil)
-            (delete-overlay resize-window--background-overlay)))))))
+  (condition-case nil
+   (let ((reading-characters t)
+         ;; allow mini-buffer to collapse after displaying menu
+         (resize-mini-windows t))
+     (while reading-characters
+       (let* ((char (resize-window--match-alias (read-key)))
+              (choice (assoc char resize-window-dispatch-alist))
+              (capital (when (numberp char)
+                         (assoc (+ char 32) resize-window-dispatch-alist))))
+         (cond
+          (choice (resize-window--execute-action choice))
+          ((and capital (resize-window--allows-capitals capital))
+           ;; rather than pass an argument, we tell it to "scale" it
+           ;; with t and that method can worry about how to get that
+           ;; action
+           (resize-window--execute-action capital t))
+          (t (setq reading-characters nil)
+             (delete-overlay resize-window--background-overlay))))))
+   (quit (resize-window--delete-overlays))))
 
 ;;; Function Handlers
 (defun resize-window--enlarge-down (&optional size)
