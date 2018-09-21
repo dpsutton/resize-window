@@ -64,6 +64,7 @@ There are a few things that you can do. There are customizable variables:
 - resize-window-coarse-argument (default: 5)
 - resize-window-fine-argument (default: 1)
 - resize-window-allow-backgrounds (default: t)
+- resize-window-unregistered-key-quit (default: nil)
 - resize-window-swap-capital-and-lowercase-behavior (default: nil)
 - resize-window-notify-with-messages (default: t)
 

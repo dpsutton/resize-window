@@ -82,6 +82,12 @@ This is also valuable to see that you are in resize mode."
   :type 'boolean
   :group 'resize-window)
 
+(defcustom resize-window-unregistered-key-quit nil
+  "Quit when an unregistered key is pressed.
+If nil do not quit and notify the unregistered key pressed."
+  :type 'boolean
+  :group 'resize-window)
+
 (defcustom resize-window-swap-capital-and-lowercase-behavior nil
   "Reverse default behavior of lower case and uppercase arguments."
   :type 'boolean
@@ -261,7 +267,8 @@ to resize right."
               (resize-window--execute-action capital t))
              (;; NOTE: Don't use `=', if `char' is a symbol like
               ;; 'insertchar it will fail.  Use `equal' instead.
-              (or (equal char ?q)
+              (or resize-window-unregistered-key-quit
+                  (equal char ?q)
                   (equal char ?Q)
                   (equal char (string-to-char " ")))
               (setq reading-characters nil)
