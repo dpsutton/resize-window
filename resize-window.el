@@ -1,8 +1,9 @@
 ;;; resize-window.el --- Easily resize windows          -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2015  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2018  Free Software Foundation, Inc.
 
 ;; Author: Dan Sutton  <danielsutton01@gmail.com>
+;; Author: Matthew White  <mehw.is.me@inventati.org>
 ;; Maintainer: Dan Sutton  <danielsutton01@gmail.com>
 ;; URL: https://github.com/dpsutton/resize-mode
 
