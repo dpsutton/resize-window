@@ -48,7 +48,8 @@ panes. Use `W` to cycle in the opposite direction.
 - `0`: Delete the current window.
 - `k`: Delete other windows and save the state on the stack.
 - `s`: Save the state on the stack so you may restore it later.
-- `y`: Restore to a previous saved state.
+- `>`: Restore to a previous saved state. Use `<` to restore in the
+opposite direction.
 - `?`: Display the help menu listing commands.
 
 The best part of this is that resize-window keeps listening for more
@@ -121,17 +122,37 @@ In this example, we can bounce back and forth between the test and
 code of resize-window. When we want to work in one exclusively, we
 call up resize-window (bound with `C-c ;` and then hit `k` for kill
 all the other windows. We edit our tests and then call up
-resize-window and hit `y` for yank. Think that we just put them into a
-ring buffer, but they are actually in a stack.
+resize-window and hit `>` restore to a succeding saved state or `<`
+for a preceding one. Think that we just put them into a ring buffer,
+but they are actually in a stack.
+
+## The window configurations stack ##
+
+The stack is a customizable size holder for window configurations. It
+folds over. Moving after the end restarts from the beginning and vice
+versa. Old configurations are dropped due to a chosen reduction in its
+size or an exceding number of configurations saved.
+
+Move forward/backward via `>` and `<` (to avoid pressing a modifier
+key, you may consider `,` and `.` as possible alternatives).
+Originally I was using `r` and `R` to move in the stack...
+
+Special flags give hints about the direction followed, forward `>` or
+backward `<`, and if the current window configuration is modified `*`
+or not `=` (aka saved in the stack at the current position).
+
+When a configuration is modified, adjacent positions in the stack are
+considered to see if such new configuration is already there. In such
+a case, modification flag and direction followed are set accordingly.
 
 ## Create windows ##
 
 Here, we want to create a bunch of windows. We can use `2` and `3` to
 make splits like their native emacs commands `C-x 2` and `C-x 3`. Use
 `0` to kill the split. If you want to go down to a single, use the
-example above to hit `k` to kill all and then `y` to restore. Again,
-all of the buffer resizing commands work (`f`, `p`, `b`, `n`) to
-resize these buffers.
+example above to hit `k` to kill all and then `>` or `<` to restore.
+Again, all of the buffer resizing commands work (`f`, `p`, `b`, `n`)
+to resize these buffers.
 
 ![usage gif](images/navigate.gif)
 
