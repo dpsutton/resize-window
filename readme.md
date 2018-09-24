@@ -47,6 +47,7 @@ panes. Use `W` to cycle in the opposite direction.
 - `3`: Split the window vertically.
 - `0`: Delete the current window.
 - `k`: Delete other windows and save the state on the stack.
+- `x`: Drop the current saved state. Switch to another one.
 - `s`: Save the state on the stack so you may restore it later.
 - `>`: Restore to a previous saved state. Use `<` to restore in the
 opposite direction.

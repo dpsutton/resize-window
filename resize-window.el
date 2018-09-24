@@ -53,6 +53,7 @@
 ;;   3 : Split the window vertically.
 ;;   0 : Delete the current window.
 ;;   k : Delete other windows and save the state on the stack.
+;;   x : Drop the current saved state. Switch to another one.
 ;;   s : Save the state on the stack so you may restore it later.
 ;;   > : Restore to a previous saved state.
 ;;        <  Restore in the opposite direction.
@@ -160,6 +161,7 @@ should return the fine adjustment (default 1)."
     (?3 resize-window--split-window-right    "Split right (save state)" nil)
     (?0 resize-window--delete-window         "Delete window (save state)" nil)
     (?k resize-window--kill-other-windows    "Delete other windows (save state)" nil)
+    (?x resize-window--window-drop           "Drop state" nil)
     (?s resize-window--window-save           "Save state" nil)
     (?> resize-window--restore-head          "Restore succeding (save state)" nil)
     (?< resize-window--restore-tail          "Restore preceding (save state)" nil)
@@ -367,7 +369,10 @@ CHOICE is a \(key function documentation allows-capitals\).
 If SCALED, then call action with the `resize-window-uppercase-argument'."
   (let ((action (resize-window--choice-lambda choice))
         (description (resize-window--choice-documentation choice)))
-    (resize-window--notify "%s" description)
+    (if (resize-window--keys-equal
+         (resize-window--choice-keybinding choice) [?x])
+        (resize-window--cancel-notify)
+      (resize-window--notify "%s" description))
     (condition-case nil
         (if scaled
             (funcall action (resize-window-uppercase-argument))
@@ -921,6 +926,33 @@ If STACK-SIZE is nil use `resize-window-stack-size'."
             (setq resize-window--window-stack
                   (delq old-member resize-window--window-stack))))
         oldest-members))))
+
+(defun resize-window--window-drop ()
+  "Drop the current window configuration from the stack.
+Ask the user for confirmation then return the removed member.
+
+Abort if the configuration isn't in the stack or the user decided
+otherwise. If the configuration is dropped, switch to another one
+in respect to `resize-window--restore-forward' direction flag."
+  (if (or (resize-window--stack-config-modified)
+          (not (let ((query-replace-map (copy-keymap query-replace-map)))
+                 (define-key query-replace-map [? ] 'skip)
+                 (y-or-n-p "Drop saved state? "))))
+      (resize-window--notify-status)
+    (prog1
+        (resize-window--pop-stack-member)
+      (unless resize-window--restore-forward
+        (resize-window--stack-shift-member t))
+      (let* ((curr-member (resize-window--get-stack-member))
+             (curr-config (car curr-member)))
+        (when curr-config
+          (resize-window--restore-config curr-config)
+          (setq curr-config (resize-window--window-config))
+          (resize-window--stack-member-config curr-config)
+          (resize-window--stack-member-svtime (current-time))))
+      (setq resize-window--config-modified
+            (resize-window--stack-config-modified))
+      (resize-window--notify "Drop saved state"))))
 
 (defun resize-window--window-save ()
   "Save the current window configuration in the stack.
