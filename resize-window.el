@@ -632,9 +632,9 @@ See also `resize-window-stack-size'."
        (not (resize-window--key-element
              key resize-window-dispatch-alist))))
 
-(defun resize-window-add-choice (key func doc &optional allows-capitals)
+(defun resize-window-add-choice (key func doc &optional allows-capitals force)
   "Register a new binding for `resize-window'.
-Refuses to replace an already taken key.
+Refuses to replace an already taken key unless FORCE is non-nil.
 
 KEY is the key (e.g. ?c) that invokes the function FUNC. DOC is a
 docstring for the help menu. A non-nil ALLOWS-CAPITALS tells FUNC
@@ -643,6 +643,15 @@ allow capitals, otherwise to allow capitals should be of optional
 single arity so a capital KEY may be passed to FUNC when pressed.
 
 See also `resize-window--key-str'."
+  (when force
+    (setq resize-window-alias-list
+          (delq (resize-window--key-element
+                 key resize-window-alias-list)
+                resize-window-alias-list))
+    (setq resize-window-dispatch-alist
+          (delq (resize-window--key-element
+                 key resize-window-dispatch-alist)
+                resize-window-dispatch-alist)))
   (if (resize-window--key-available? key)
       (push (list key func doc allows-capitals)
             resize-window-dispatch-alist)
