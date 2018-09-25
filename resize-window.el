@@ -272,6 +272,7 @@ to resize right."
                   (equal char ?Q)
                   (equal char (string-to-char " ")))
               (setq reading-characters nil)
+              (message nil)
               (resize-window--display-menu 'kill)
               (resize-window--remove-backgrounds))
              (t
@@ -280,6 +281,7 @@ to resize right."
                 "Unregistered key: (%s) %s"
                 char (single-key-description char))))))))
     (quit
+     (message nil)
      (resize-window--display-menu 'kill)
      (resize-window--remove-backgrounds))))
 
