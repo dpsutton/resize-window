@@ -200,3 +200,117 @@ bug)). If lower case matches, do it, if uppercase matches something,
 then make sure that's ok and do it but with the
 `resize-window-uppercase-argument` rather than
 `resize-window-lowercase-argument`.
+
+### More about the window configurations stack ##
+
+Some explanations are due about the stack. Here are some details you
+may find interesting and clarifying.
+
+## Current window configuration ##
+
+The current window configuration is what you are looking at in the
+screen. Think of it like a windows layout. It may be or may be not
+equal to the first element of the stack. The former means it is
+unmodified, hence it is equal to a saved configuration in the
+stack. The latter means that it is modified, and not saved in the
+stack yet. The current window configuration is modified when a window
+is switched, split, resized, or deleted.
+
+A modified current window configuration prints the modification flag
+`*` to the notification area and an unmodified one prints `=`.
+
+## Stack navigation: shifting elements ##
+
+The stack is a spinning wheel, with no real beginning or end. The
+active element is the first one. Movements along the stack consist
+into shifting the elements. Hitting `<` (shift left) pops the last
+element and pushes it to the beginning of the stack, making it the
+first. Hitting `>` (shift right) pops the first element and pushes
+it to the end of the stack, making the second element the first.
+
+Shifting left prints the direction flag `<` to the notification area
+and shifting right prints `>`.
+
+## Stack update: auto shifting elements ##
+
+When the current window configuration is modified, a smart system
+checks the elements in the stack adjacent to the first to see if they
+are equal to the modified configuration. The direction flag suggests
+the order of comparison, i.e. start from the last element when it is
+`<` or from the second when it is `>`, until a match is found or both
+elements are tested. If a match is found, the stack is shifted in the
+direction of the match (like you hit the corresponding key binding),
+the modification flag is unset, and the direction flag is set to the
+shifting direction.
+
+## Stack update: saving a window configuration ##
+
+When the smart system did not find a match, a modified configuration
+may be automatically saved in the stack if trying to modify it again.
+This also triggers the smart system to search in the stack the newly
+modification obtained. Please note that resizing a window is exempted
+from automatically saving a modified configuration.
+
+Pressing `s`, `<`, or `>` will also save the modified configuration.
+
+The direction flag dictates where configurations are saved. If it is
+`<`, save the configuration as the first element. If it is `>`, save
+the configuration as the second element, then shift right. This is to
+give you an insight on how to step back to the previous configuration.
+For instance, if there is only a single window and the direction flag
+is `>`, when you split the window and hit `<` you will be back to the
+single window... suppose there was more than one configuration in the
+stack to begin with... If the direction flag was `<`, a split and hit
+on `>` will still get you back to the single window, but hitting `<`
+instead would have shifted to the configuration expected to be found
+on the left of the single window.
+
+```
+ config A    config C
+  -----       -----
+  | A |       |-C-|   initial condition, unmodified configuration A
+  -----       -----
+
+  notification area: [=>] (modified flag is =, direction flag is >)
+
+
+   hit 3 and split A into
+   modified configuration
+   (set modified flag: *)
+      /      |
+     /       |
+    3     planned
+    |    insertion
+    |       /          hit s to save the modified configuration or
+  -----    /  -----   you may even hit < to save and step back to A
+  | A | ----- |-C-|
+  ----- | | | -----   here (silent right shift [*>] from A on save)
+     \  -----          /
+      \               /
+      saving pushes it
+
+  notification area: [*>] (modified flag is *, direction flag is >)
+
+
+    final result
+  ----- ----- -----
+  | | | |-C-| | A |   to step back to A hit <
+  ----- ----- -----
+
+  notification area: [=>] (modified flag is =, direction flag is >)
+
+
+    shifting left
+  ----- ----- -----
+  | A | | | | |-C-|   stepped back to A, the direction flag changed
+  ----- ----- -----
+
+  notification area: [<=] (modified flag is =, direction flag is <)
+
+```
+
+## Stack update: dropping a window configuration ##
+
+When a configuration is dropped from the stack, the stack is shifted
+in the direction dictated by the direction flag, like pressing either
+`<` or `>`.
