@@ -109,11 +109,11 @@ If nil do not quit and notify the unregistered key pressed."
 (defvar resize-window--background-overlays ()
   "List of background overlays.")
 
-(defvar resize-window--window-stack ()
-  "Stack for holding window configurations.
+(defvar resize-window--window-stacks ()
+  "List of frame stacks for holding window configurations.
 
-It is an alist of format ((configuration . time)...), where time
-is the time when the configuration was saved/visited.")
+List of alists of format ((frame . ((configuration . time)...))),
+time is the time when the configuration was saved/visited.")
 
 (defvar resize-window--config-modified nil
   "Current window configuration modification flag.
@@ -389,7 +389,7 @@ If SCALED, then call action with the `resize-window-uppercase-argument'."
 Press n to resize down, p to resize up, b to resize left and f
 to resize right."
   (interactive)
-  (resize-window--refresh-stack)
+  (resize-window--refresh-stacks)
   (resize-window--seek-config)
   ;; NOTE: Do not trim the stack here. Let stack requests to handle
   ;; window configurations in excess.
@@ -592,9 +592,10 @@ Do not change the current window configuration."
         (select-frame curr-frame))
       some-config)))
 
-(defun resize-window--seek-config (&optional config)
-  "Seek the most recent version of CONFIG in the stack.
+(defun resize-window--seek-config (&optional config frame)
+  "Seek the most recent version of CONFIG in FRAME's stack.
 If CONFIG is nil use the current window configuration.
+If FRAME is nil use the current frame.
 If CONFIG is found return its stack member, otherwise return nil.
 
 If CONFIG is found, unset the `resize-window--config-modified'
@@ -603,13 +604,15 @@ and all the elements before CONFIG as part of its tail.
 
 If CONFIG isn't found, set `resize-window--config-modified'.
 
-See also `resize-window--refresh-stack'."
-  (let ((curr-config (or config (resize-window--window-config)))
-        (curr-member nil)
-        (curr-svtime 0)
-        (head nil)
-        (tail nil))
-    (dolist (this-member resize-window--window-stack)
+See also `resize-window--refresh-stacks'."
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (curr-config (or config (resize-window--window-config)))
+         (curr-member nil)
+         (curr-svtime 0)
+         (head nil)
+         (tail nil))
+    (dolist (this-member stack)
       (let ((this-config (car this-member))
             (this-svtime (cdr this-member)))
         (when (and (compare-window-configurations curr-config this-config)
@@ -621,13 +624,22 @@ See also `resize-window--refresh-stack'."
         (setq head (append head (list this-member)))))
     (when curr-member
       (setq curr-member (cons curr-config (current-time)))
-      (setq resize-window--window-stack (append head tail))
-      (setcar resize-window--window-stack curr-member))
+      (setq stack (append head tail))
+      (setcar stack curr-member)
+      (setcdr frame-stack stack))
     (setq resize-window--config-modified (not curr-member))
     curr-member))
 
-(defun resize-window--refresh-stack ()
-  "Refresh the stack and remove adjacent duplicates.
+(defun resize-window--refresh-stacks ()
+  "Refresh the stack for all the frames.
+
+See also `resize-window--refresh-frame-stack'."
+  (dolist (frame-stack resize-window--window-stacks)
+    (let ((frame (car frame-stack)))
+      (resize-window--refresh-frame-stack frame))))
+
+(defun resize-window--refresh-frame-stack (&optional frame)
+  "Refresh FRAME's stack and remove adjacent duplicates.
 Each window configuration is restored and saved again.
 
 The configurations saved time is not changed. Always remove the
@@ -637,9 +649,11 @@ A refresh reveals duplicate configurations. When a configuration
 is restored that takes account of the current state of the frame.
 Since killed buffers cannot be dug up, applying a state will use
 what it finds, and so two configurations may end up the same."
-  (let (stack-buffer)
-    (dotimes (n (length resize-window--window-stack))
-      (let* ((this-member (nth n resize-window--window-stack))
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (stack-buffer nil))
+    (dotimes (n (length stack))
+      (let* ((this-member (nth n stack))
              (this-config (resize-window--apply-config (car this-member)))
              (this-svtime (cdr this-member))
              (prev-config (caar stack-buffer))
@@ -650,281 +664,392 @@ what it finds, and so two configurations may end up the same."
               (setcar stack-buffer this-member))
           (when this-config
             (push this-member stack-buffer)))))
-    (setq resize-window--window-stack (nreverse stack-buffer))))
+    (setq stack (nreverse stack-buffer))
+    (if stack
+        (setcdr frame-stack stack)
+      (resize-window--del-frame-stack frame))))
 
-(defun resize-window--get-stack-head ()
-  "Return the first member in the window configurations stack."
-  (car resize-window--window-stack))
+(defun resize-window--frame-stack (&optional frame)
+  "Return the FRAME's window configurations stack.
+If FRAME is nil use the current frame."
+  (when (setq frame (or frame (selected-frame)))
+    (assq frame resize-window--window-stacks)))
 
-(defun resize-window--pop-stack-head ()
-  "Remove the first member from the window configurations stack.
+(defun resize-window--del-frame-stack (&optional frame)
+  "Remove FRAME's window configurations stack.
+If FRAME is nil use the current frame.
+Return the removed FRAME's stack."
+  (let ((frame-stack (resize-window--frame-stack frame)))
+    (when frame-stack
+      (setq resize-window--window-stacks
+            (delq frame-stack resize-window--window-stacks))
+      frame-stack)))
+
+(defun resize-window--get-stack-head (&optional frame)
+  "Return the first member in FRAME's window configurations stack.
+If FRAME is nil use the current frame."
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack)))
+    (car stack)))
+
+(defun resize-window--pop-stack-head (&optional frame)
+  "Remove the first member from FRAME's window configurations stack.
+If FRAME is nil use the current frame.
 Return the removed member."
-  (prog1
-      (resize-window--get-stack-head)
-    (setq resize-window--window-stack
-          (cdr resize-window--window-stack))))
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (this-member (car stack))
+         (rest-members (cdr stack)))
+    (when (consp frame-stack)
+      (if rest-members
+          (setcdr frame-stack rest-members)
+        (resize-window--del-frame-stack frame))
+      this-member)))
 
-(defun resize-window--push-stack-head (element)
-  "Push ELEMENT to the begin of the window configurations stack.
+(defun resize-window--push-stack-head (element &optional frame)
+  "Push ELEMENT to the begin of FRAME's window configurations stack.
+If FRAME is nil use the current frame.
 Return ELEMENT."
-  (when element
-    (setq resize-window--window-stack
-          (append (list element) resize-window--window-stack))
-    element))
+  (when (and element (setq frame (or frame (selected-frame))))
+    (let* ((frame-stack
+            (or (resize-window--frame-stack frame)
+                (car (push (list frame)
+                           resize-window--window-stacks))))
+           (stack (cdr frame-stack)))
+      (car (setcdr frame-stack
+                   (append (list element) stack))))))
 
-(defun resize-window--set-stack-head (element)
-  "Replace the first member in the window configurations stack
+(defun resize-window--set-stack-head (element &optional frame)
+  "Replace the first member in FAME's window configurations stack
 with ELEMENT then return ELEMENT.
-Push ELEMENT in the stack if the stack is empty."
-  (when element
-    (if resize-window--window-stack
-        (setcar resize-window--window-stack element)
-      (resize-window--push-stack-head element))))
+Push ELEMENT in the stack if the stack is empty.
+If FRAME is nil use the current frame."
+  (when (and element (setq frame (or frame (selected-frame))))
+    (let* ((frame-stack
+            (or (resize-window--frame-stack frame)
+                (car (push (list frame)
+                           resize-window--window-stacks))))
+           (stack (cdr frame-stack)))
+      (if (consp stack)
+          (setcar stack element)
+        (car (setcdr frame-stack (list element)))))))
 
-(defun resize-window--stack-head-config (config)
-  "Replace the first configuration in the window configurations
-stack with CONFIG then return CONFIG."
-  (when (and config resize-window--window-stack)
-    (setcar (resize-window--get-stack-head) config)))
-
-(defun resize-window--stack-head-svtime (save-time)
-  "Replace the first configuration's save time in the window
-configurations stack to SAVE-TIME then return SAVE-TIME."
-  (when (and save-time resize-window--window-stack)
-    (setcdr (resize-window--get-stack-head) save-time)))
-
-(defun resize-window--get-stack-tail ()
-  "Return the last member in the window configurations stack."
-  (car (last resize-window--window-stack)))
-
-(defun resize-window--pop-stack-tail ()
-  "Remove the last member from the window configurations stack.
-Return the removed member."
-  (prog1
-      (resize-window--get-stack-tail)
-    (setq resize-window--window-stack
-          (nbutlast resize-window--window-stack))))
-
-(defun resize-window--push-stack-tail (element)
-  "Push ELEMENT to the end of the window configurations stack.
-Return ELEMENT."
-  (when element
-    (setq resize-window--window-stack
-          (append resize-window--window-stack (list element)))
-    element))
-
-(defun resize-window--set-stack-tail (element)
-  "Replace the last member in the window configurations stack
-with ELEMENT then return ELEMENT.
-Push ELEMENT in the stack if the stack is empty."
-  (when element
-    (if resize-window--window-stack
-        (setcar (last resize-window--window-stack) element)
-      (resize-window--push-stack-tail element))))
-
-(defun resize-window--stack-tail-config (config)
-  "Replace the last configuration in the window configurations
-stack with CONFIG then return CONFIG."
-  (when (and config resize-window--window-stack)
-    (setcar (resize-window--get-stack-tail) config)))
-
-(defun resize-window--stack-tail-svtime (save-time)
-  "Replace the last configuration's save time in the window
-configurations stack with SAVE-TIME then return SAVE-TIME."
-  (when (and save-time resize-window--window-stack)
-    (setcdr (resize-window--get-stack-tail) save-time)))
-
-(defun resize-window--get-stack-member (&optional from-tail)
-  "Return the first member in the window configurations stack.
-If FROM-TAIL is non-nil return the last member intead."
-  (if from-tail
-      (resize-window--get-stack-tail)
-    (resize-window--get-stack-head)))
-
-(defun resize-window--pop-stack-member (&optional from-tail)
-  "Remove the first member from the window configurations stack.
-If FROM-TAIL is non-nil remove the last member instead.
-Return the removed member."
-  (if from-tail
-      (resize-window--pop-stack-tail)
-    (resize-window--pop-stack-head)))
-
-(defun resize-window--push-stack-member (element &optional to-tail)
-  "Push ELEMENT to the begin of the window configurations stack.
-If TO-TAIL is non-nil push to the end.
-Return ELEMENT."
-  (if to-tail
-      (resize-window--push-stack-tail element)
-    (resize-window--push-stack-head element)))
-
-(defun resize-window--set-stack-member (element &optional to-tail)
-  "Replace the first member in the window configurations stack
-with ELEMENT then return ELEMENT.
-If TO-TAIL is non-nil replace the last."
-  (if to-tail
-      (resize-window--set-stack-tail element)
-    (resize-window--set-stack-head element)))
-
-(defun resize-window--stack-member-config (config &optional to-tail)
-  "Replace the first configuration in the window configurations
+(defun resize-window--stack-head-config (config &optional frame)
+  "Replace the first configuration in FRAME's window configurations
 stack with CONFIG then return CONFIG.
-If TO-TAIL is non-nil replace the last."
-  (if to-tail
-      (resize-window--stack-tail-config config)
-    (resize-window--stack-head-config config)))
+If FRAME is nil use the current frame."
+  (let ((element (resize-window--get-stack-head frame)))
+    (when (and config element)
+      (setcar element config))))
 
-(defun resize-window--stack-member-svtime (save-time &optional to-tail)
-  "Replace the first configuration's save time in the window
+(defun resize-window--stack-head-svtime (save-time &optional frame)
+  "Replace the first configuration's save time in FRAME's window
+configurations stack to SAVE-TIME then return SAVE-TIME.
+If FRAME is nil use the current frame."
+  (let ((element (resize-window--get-stack-head frame)))
+    (when (and save-time element)
+      (setcdr element save-time))))
+
+(defun resize-window--get-stack-tail (&optional frame)
+  "Return the last member in FRAME's window configurations stack.
+If FRAME is nil use the current frame."
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack)))
+    (car (last stack))))
+
+(defun resize-window--pop-stack-tail (&optional frame)
+  "Remove the last member from FRAME's window configurations stack.
+If FRAME is nil use the current frame.
+Return the removed member."
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (this-member (car (last stack)))
+         (rest-members (nbutlast stack)))
+    (when (consp frame-stack)
+      (if rest-members
+          (setcdr frame-stack rest-members)
+        (resize-window--del-frame-stack frame))
+      this-member)))
+
+(defun resize-window--push-stack-tail (element &optional frame)
+  "Push ELEMENT to the end of FRAME's window configurations stack.
+If FRAME is nil use the current frame.
+Return ELEMENT."
+  (when (and element (setq frame (or frame (selected-frame))))
+    (let* ((frame-stack
+            (or (resize-window--frame-stack frame)
+                (car (push (list frame)
+                           resize-window--window-stacks))))
+           (stack (cdr frame-stack)))
+      (car (last (setcdr frame-stack
+                         (append stack (list element))))))))
+
+(defun resize-window--set-stack-tail (element &optional frame)
+  "Replace the last member in FRAME's window configurations stack
+with ELEMENT then return ELEMENT.
+Push ELEMENT in the stack if the stack is empty.
+If FRAME is nil use the current frame."
+  (when (and element (setq frame (or frame (selected-frame))))
+    (let* ((frame-stack
+            (or (resize-window--frame-stack frame)
+                (car (push (list frame)
+                           resize-window--window-stacks))))
+           (stack (cdr frame-stack)))
+      (if (consp stack)
+          (setcar (last stack) element)
+        (car (setcdr frame-stack (list element)))))))
+
+(defun resize-window--stack-tail-config (config &optional frame)
+  "Replace the last configuration in FRAME's window configurations
+stack with CONFIG then return CONFIG.
+If FRAME is nil use the current frame."
+  (let ((element (resize-window--get-stack-tail frame)))
+    (when (and config element)
+      (setcar element config))))
+
+(defun resize-window--stack-tail-svtime (save-time &optional frame)
+  "Replace the last configuration's save time in FRAME's window
 configurations stack with SAVE-TIME then return SAVE-TIME.
-If TO-TAIL is non-nil replace the last."
+If FRAME is nil use the current frame."
+  (let ((element (resize-window--get-stack-tail frame)))
+    (when (and save-time element)
+      (setcdr element save-time))))
+
+(defun resize-window--get-stack-member (&optional from-tail frame)
+  "Return the first member in FRAME's window configurations stack.
+If FROM-TAIL is non-nil return the last member intead.
+If FRAME is nil use the current frame."
+  (if from-tail
+      (resize-window--get-stack-tail frame)
+    (resize-window--get-stack-head frame)))
+
+(defun resize-window--pop-stack-member (&optional from-tail frame)
+  "Remove the first member from FRAME's window configurations stack.
+If FROM-TAIL is non-nil remove the last member instead.
+If FRAME is nil use the current frame.
+Return the removed member."
+  (if from-tail
+      (resize-window--pop-stack-tail frame)
+    (resize-window--pop-stack-head frame)))
+
+(defun resize-window--push-stack-member (element &optional to-tail frame)
+  "Push ELEMENT to the begin of FRAME's window configurations stack.
+If TO-TAIL is non-nil push to the end.
+If FRAME is nil use the current frame.
+Return ELEMENT."
   (if to-tail
-      (resize-window--stack-tail-svtime save-time)
-    (resize-window--stack-head-svtime save-time)))
+      (resize-window--push-stack-tail element frame)
+    (resize-window--push-stack-head element frame)))
 
-(defun resize-window--get-stack-nth (n)
-  "Return the Nth member in the window configurations stack.
+(defun resize-window--set-stack-member (element &optional to-tail frame)
+  "Replace the first member in FRAME's window configurations stack
+with ELEMENT then return ELEMENT.
+If TO-TAIL is non-nil replace the last.
+If FRAME is nil use the current frame."
+  (if to-tail
+      (resize-window--set-stack-tail element frame)
+    (resize-window--set-stack-head element frame)))
+
+(defun resize-window--stack-member-config (config &optional to-tail frame)
+  "Replace the first configuration in FRAME's window configurations
+stack with CONFIG then return CONFIG.
+If TO-TAIL is non-nil replace the last.
+If FRAME is nil use the current frame."
+  (if to-tail
+      (resize-window--stack-tail-config config frame)
+    (resize-window--stack-head-config config frame)))
+
+(defun resize-window--stack-member-svtime (save-time &optional to-tail frame)
+  "Replace the first configuration's save time in FRAME's window
+configurations stack with SAVE-TIME then return SAVE-TIME.
+If TO-TAIL is non-nil replace the last.
+If FRAME is nil use the current frame."
+  (if to-tail
+      (resize-window--stack-tail-svtime save-time frame)
+    (resize-window--stack-head-svtime save-time frame)))
+
+(defun resize-window--get-stack-nth (n &optional frame)
+  "Return the Nth member in FRAME's window configurations stack.
 If N is negative count from the end, where -1 is the end.
+If FRAME is nil use the current frame.
 Return nil if N is out of bound."
-  (let* ((stack-size (length resize-window--window-stack))
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (stack-size (length stack))
          (stack-last (1- stack-size))
          (x (if (< n 0) (+ stack-size n) n)))
     (and (>= x 0)
          (<= x stack-last)
-         (nth x resize-window--window-stack))))
+         (nth x stack))))
 
-(defun resize-window--pop-stack-nth (n)
-  "Remove the Nth member from the window configurations stack.
+(defun resize-window--pop-stack-nth (n &optional frame)
+  "Remove the Nth member from FRAME's window configurations stack.
 If N is negative count from the end, where -1 is the end.
-Return the removed member or nil if N is out of bound."
-  (let* ((stack-size (length resize-window--window-stack))
+Return the removed member or nil if N is out of bound.
+If FRAME is nil use the current frame."
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (stack-size (length stack))
          (stack-last (1- stack-size))
          (x (if (< n 0) (+ stack-size n) n)))
     (and (>= x 0)
          (<= x stack-last)
-         (pop (nthcdr x resize-window--window-stack)))))
+         (prog1
+             (pop (nthcdr x stack))
+           (if stack
+               (setcdr frame-stack stack)
+             (resize-window--del-frame-stack frame))))))
 
-(defun resize-window--push-stack-nth (element n)
-  "Push ELEMENT as the Nth member in the window configurations
+(defun resize-window--push-stack-nth (element n &optional frame)
+  "Push ELEMENT as the Nth member in FRAME's window configurations
 stack then return ELEMENT or nil if N is out of bound.
-If N is negative count from the end, where -1 is the end."
-  (let* ((stack-size (length resize-window--window-stack))
+If N is negative count from the end, where -1 is the end.
+If FRAME is nil use the current frame."
+  (setq frame (or frame (selected-frame)))
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (stack-size (length stack))
          (stack-last (1- stack-size))
          (x (if (< n 0) (+ stack-size n 1) n)))
     (when (and element (>= x 0) (<= x stack-size))
-      (let ((head (butlast resize-window--window-stack (- stack-size x)))
-            (tail (nthcdr x resize-window--window-stack)))
-        (setq resize-window--window-stack
-              (append head (list element) tail))
+      (let ((head (butlast stack (- stack-size x)))
+            (tail (nthcdr x stack)))
+        (setq stack (append head (list element) tail))
+        (unless frame-stack
+          (setq frame-stack
+                (car (push (list frame)
+                           resize-window--window-stacks))))
+        (setcdr frame-stack stack)
         element))))
 
-(defun resize-window--set-stack-nth (element n)
-  "Replace the Nth member in the window configurations stack
+(defun resize-window--set-stack-nth (element n &optional frame)
+  "Replace the Nth member in FRAME's window configurations stack
 with ELEMENT then return ELEMENT or nil if N is out of bound.
 Push ELEMENT in the stack if the stack is empty with N 0 or -1.
-If N is negative count from the end, where -1 is the end."
-  (let* ((stack-size (length resize-window--window-stack))
+If N is negative count from the end, where -1 is the end.
+If FRAME is nil use the current frame."
+  (setq frame (or frame (selected-frame)))
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (stack-size (length stack))
          (stack-last (if (> stack-size 0) (1- stack-size) 0))
          (x (if (< n 0) (+ stack-size n (if (> stack-size 0) 0 1)) n)))
     (when (and element (>= x 0) (<= x stack-last))
-      (let ((head (butlast resize-window--window-stack (- stack-size x)))
-            (tail (nthcdr (1+ x) resize-window--window-stack)))
-        (setq resize-window--window-stack
-              (append head (list element) tail))
+      (let ((head (butlast stack (- stack-size x)))
+            (tail (nthcdr (1+ x) stack)))
+        (setq stack (append head (list element) tail))
+        (unless frame-stack
+          (setq frame-stack
+                (car (push (list frame)
+                           resize-window--window-stacks))))
+        (setcdr frame-stack stack)
         element))))
 
-(defun resize-window--stack-nth-config (config n)
-  "Replace the Nth configuration in the window configurations stack
-with CONFIG then return CONFIG or nil if N is out of bound.
-If N is negative count from the end, where -1 is the end."
-  (let ((element (resize-window--get-stack-nth n)))
+(defun resize-window--stack-nth-config (config n &optional frame)
+  "Replace the Nth configuration in FRAME's window configurations
+stack with CONFIG then return CONFIG or nil if N is out of bound.
+If N is negative count from the end, where -1 is the end.
+If FRAME is nil use the current frame."
+  (let ((element (resize-window--get-stack-nth n frame)))
     (when element
       (setcar element config))))
 
-(defun resize-window--stack-nth-svtime (save-time n)
-  "Replace the Nth configuration's save time in the window configurations
-stack with SAVE-TIME then return SAVE-TIME or nil if N is out of bound.
-If N is negative count from the end, where -1 is the end."
-  (let ((element (resize-window--get-stack-nth n)))
+(defun resize-window--stack-nth-svtime (save-time n &optional frame)
+  "Replace the Nth configuration's save time in FRAME's window
+configurations stack with SAVE-TIME then return SAVE-TIME or nil
+if N is out of bound.
+If N is negative count from the end, where -1 is the end.
+If FRAME is nil use the current frame."
+  (let ((element (resize-window--get-stack-nth n frame)))
     (when element
       (setcdr element save-time))))
 
-(defun resize-window--stack-shift-head ()
-  "Shift right in the window configurations stack.
+(defun resize-window--stack-shift-head (&optional frame)
+  "Shift right in FRAME's stack.
 Return the member shifted to if any.
+If FRAME is nil use the current frame.
 
-Pop the head and push it to the tail in the stack. It is like
+Pop the head and push it to the tail in FRAME's stack. It is like
 scrolling right in the stack. The next member becomes the first."
-  (let ((element (resize-window--pop-stack-head)))
+  (let ((element (resize-window--pop-stack-head frame)))
     (when element
-      (resize-window--push-stack-tail element))))
+      (resize-window--push-stack-tail element frame))))
 
-(defun resize-window--stack-shift-tail ()
-  "Shift left in the window configurations stack.
+(defun resize-window--stack-shift-tail (&optional frame)
+  "Shift left in FRAME's stack.
 Return the member shifted to if any.
+If FRAME is nil use the current frame.
 
-Pop the tail and push it to the head in the stack. It is like
+Pop the tail and push it to the head in FRAME's stack. It is like
 scrolling left in the stack. The last member becomes the first."
-  (let ((element (resize-window--pop-stack-tail)))
+  (let ((element (resize-window--pop-stack-tail frame)))
     (when element
-      (resize-window--push-stack-head element))))
+      (resize-window--push-stack-head element frame))))
 
-(defun resize-window--stack-shift-member (&optional to-tail)
-  "Shitf right in the window configurations stack.
+(defun resize-window--stack-shift-member (&optional to-tail frame)
+  "Shitf right in FRAME's stack.
 If TO-TAIL is non-nil shift left.
 Return the member shifted to if any.
 
 Move the head to the tail like scrolling right, or move the tail
 to the head like scrolling left if TO-TAIL is non-nil."
   (if to-tail
-      (resize-window--stack-shift-tail)
-    (resize-window--stack-shift-head)))
+      (resize-window--stack-shift-tail frame)
+    (resize-window--stack-shift-head frame)))
 
-(defun resize-window--stack-config-modified (&optional config from-tail)
-  "Return non-nil if CONFIG differs from the stack first configuration.
+(defun resize-window--stack-config-modified (&optional config from-tail frame)
+  "Return non-nil if CONFIG differs from FRAME's stack first configuration.
 If CONFIG is nil use the current window configuration.
-If FROM-TAIL is non-nil check the last configuration."
+If FROM-TAIL is non-nil check the last configuration.
+If FRAME is nil use the current frame."
   (let* ((curr-config (or config (resize-window--window-config)))
          (this-member (if from-tail
-                          (resize-window--get-stack-tail)
-                        (resize-window--get-stack-head)))
+                      (resize-window--get-stack-tail frame)
+                    (resize-window--get-stack-head frame)))
          (this-config (car this-member)))
     (or (not (setq this-config (resize-window--apply-config this-config)))
         (not (compare-window-configurations curr-config this-config)))))
 
-(defun resize-window--trim-stack-dups (&optional config from-tail)
+(defun resize-window--trim-stack-dups (&optional config from-tail frame)
   "Trim consecutive duplicates of CONFIG from the beginning of
-the stack or from the end if FROM-TAIL is non-nil.
+FRAME's stack or from the end if FROM-TAIL is non-nil.
 If CONFIG is nil use the current window configuration.
+If FRAME is nil use the current frame.
 Return the first stack member that differs from CONFIG."
   (let ((curr-config (or config (resize-window--window-config)))
         (this-member nil)
         (this-config nil))
     (while
         (and (setq this-member
-                   (resize-window--get-stack-member from-tail))
+                   (resize-window--get-stack-member from-tail frame))
              (setq this-config (car this-member))
              (setq this-config (resize-window--apply-config this-config))
              (compare-window-configurations curr-config this-config)
-             (resize-window--pop-stack-member from-tail)))
+             (resize-window--pop-stack-member from-tail frame)))
     this-member))
 
-(defun resize-window--window-trim (&optional stack-size)
-  "Trim the oldest window configurations from the stack in
+(defun resize-window--window-trim (&optional frame stack-size)
+  "Trim the oldest window configurations from FRAME's stack in
 excess of STACK-SIZE then return the removed stack members.
+If FRAME is nil use the current frame.
 If STACK-SIZE is nil use `resize-window-stack-size'."
-  (let* ((size (length resize-window--window-stack))
+  (let* ((frame-stack (resize-window--frame-stack frame))
+         (stack (cdr frame-stack))
+         (size (length stack))
          (trim (- size (or stack-size resize-window-stack-size))))
     (when (> trim 0)
       (let ((oldest-members
-             (sort (copy-sequence resize-window--window-stack)
+             (sort (copy-sequence stack)
                    (lambda (a b)
                      (time-less-p (cdr a) (cdr b))))))
         (setq oldest-members
               (nbutlast oldest-members (- size trim)))
         (dotimes (n (length oldest-members))
           (let ((old-member (nth n oldest-members)))
-            (setq resize-window--window-stack
-                  (delq old-member resize-window--window-stack))))
+            (setq stack (delq old-member stack))))
+        (if stack
+            (setcdr frame-stack stack)
+          (resize-window--del-frame-stack frame))
         oldest-members))))
 
 (defun resize-window--window-drop ()

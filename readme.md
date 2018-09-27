@@ -134,6 +134,9 @@ folds over. Moving after the end restarts from the beginning and vice
 versa. Old configurations are dropped due to a chosen reduction in its
 size or an exceding number of configurations saved.
 
+Each frame has its own personalized stack. Scrolling the stack or one
+frame will not alter the window configuration of other frames.
+
 Move forward/backward via `>` and `<` (to avoid pressing a modifier
 key, you may consider `,` and `.` as possible alternatives).
 Originally I was using `r` and `R` to move in the stack...
