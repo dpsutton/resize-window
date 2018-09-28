@@ -17,6 +17,8 @@ matrix:
 sudo: required
 before_install:
   - curl -fsSkL https://gist.github.com/rejeep/7736123/raw > travis.sh && source ./travis.sh
+  - sudo apt-get update
+  - sudo apt-get install -y texinfo
   - evm install $EVM_EMACS --use --skip
   - cask
 
